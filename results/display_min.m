@@ -1,13 +1,13 @@
 clear; close all;
 
-filename='allcf_10_1100.mat';
+filename='allcf_10_amode3_10.mat';
 load(filename);
 
 rmse = 1;
 gmm  = 2;
 gmm2 = 3;
 
-middle = floor(length(r_z)/2);
+middle = ceil(length(r_z)/2);
 costfunctions_min_normalized = costfunctions_min - middle;
 costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 

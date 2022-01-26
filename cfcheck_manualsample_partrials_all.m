@@ -39,7 +39,7 @@ model_ptCloud = U';
 % obtain all combination of z rotation and translation
 range = 10;
 step  = 0.5;
-r_z   = (-range:step:range);
+r_z   = (-range:sgit tep:range);
 t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
 % change z rotation to rotation matrix
 rs = [ r_z', zeros(length(r_z), 2) ];
@@ -96,31 +96,6 @@ end
 toc;
 
 [X,Y] = meshgrid(r_z, t_z);
-
-figure2 = figure(2);
-% figure2.WindowState  = 'maximized';
-
-subplot(1,3,1);
-surf(X,Y, cf_rmse);
-xlabel('Rz (deg)');
-ylabel('tz (mm)');
-zlabel('GMM L2 distance');
-view(90, 90);
-
-subplot(1,3,2);
-surf(X,Y, cf_gmm);
-xlabel('Rz (deg)');
-ylabel('tz (mm)');
-zlabel('GMM L2 distance');
-view(90, 90);
-
-subplot(1,3,3);
-surf(X,Y, cf_gmm2);
-xlabel('Rz (deg)');
-ylabel('tz (mm)');
-zlabel('GMM CPD distance');
-view(90, 90);
-
 
 minValue = min(cf_rmse(:));
 [costfunctions_min(trial, 1, 1), costfunctions_min(trial, 2, 1)] = find(cf_rmse == minValue);

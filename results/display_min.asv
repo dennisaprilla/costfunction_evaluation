@@ -1,0 +1,16 @@
+clear; close all;
+
+filename='test.mat';
+load(filename);
+
+
+rmse = 1;
+gmm  = 2;
+gmm2 = 3;
+
+figure;
+subplot(1,3,rmse);
+scatter(costfunctions_min(:,1,rmse), costfunctions_min(:,2,rmse));
+xlim([0 41]);
+ylim([0 41]);
+grid on; axis equal;

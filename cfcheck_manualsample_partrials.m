@@ -18,56 +18,19 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 selectedpoint_str = sprintf('data/bone/amode_measure.mat');
 load(selectedpoint_str);
 U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]' ./ ptCloud_scale;
+
+num_trials        = 1;
+num_costfunction  = 3;
+costfunctions_min = zeros(num_trials, 2, num_costfunction); 
+
+for trial=1:num_trials
+fprintf('trials: %d\n', trial);
+
 % add isotropic zero-mean gaussian noise to U, simulating noise measuremen
 noise        = 1;
 % random_noise = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
 random_noise = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
 U            = U + random_noise;
-
-<<<<<<< HEAD
-% plot Ŭ, the noiseless, complete, moving dataset
-figure1 = figure(1);
-figure1.WindowState  = 'maximized';
-axes1 = axes('Parent', figure1);
-plot3( axes1, ...
-       U_breve(1,:), ...
-       U_breve(2,:), ...
-       U_breve(3,:), ...
-       '.', 'Color', [0.7 0.7 0.7],...
-       'Tag', 'plot_Ubreve');
-xlabel('X'); ylabel('Y');
-grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
-% plot U, the noisy, incomplete, moving dataset
-plot3( axes1, ...
-       U(1,:), ...
-       U(2,:), ...
-       U(3,:), ...
-       'or', ...
-       'Tag', 'plot_U');
-% arrange view 
-view(axes1, 5, 80);
-=======
-% % plot Ŭ, the noiseless, complete, moving dataset
-% figure1 = figure(1);
-% figure1.WindowState  = 'maximized';
-% axes1 = axes('Parent', figure1);
-% plot3( axes1, ...
-%        U_breve(1,:), ...
-%        U_breve(2,:), ...
-%        U_breve(3,:), ...
-%        '.', 'Color', [0.7 0.7 0.7],...
-%        'MarkerSize', 0.1, ...
-%        'Tag', 'plot_Ubreve');
-% xlabel('X'); ylabel('Y');
-% grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
-% % plot U, the noisy, incomplete, moving dataset
-% plot3( axes1, ...
-%        U(1,:), ...
-%        U(2,:), ...
-%        U(3,:), ...
-%        'or', ...
-%        'Tag', 'plot_U');
->>>>>>> 83b1528468043f7d5ffa3fe261d39df8e8021764
    
 %%
 
@@ -86,7 +49,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 % prepare variable to contains all rmse
 cf_gmm  = zeros(length(r_z), length(t_z));
-cf_gmm2  = zeros(length(r_z), length(t_z));
+cf_gmm2 = zeros(length(r_z), length(t_z));
 cf_rmse = zeros(length(r_z), length(t_z));
 
 loop_z = length(r_z);
@@ -105,15 +68,16 @@ parfor current_z = 1:loop_z
         U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
         scene_ptCloud = U_breve_prime';
         
-        % compute nearest index (and nearest distance) using knnsearch
+        % RMSE
         [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
-        % store the mean distance
         cf_t_rmse(current_t) = mean(nearest_dist);
         
+        % GMM L2 Distance
         scale = 9e-4;
         [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
         cf_t_gmm(current_t) = -f;
 
+        % GMM CPD Distance (?)
         X = scene_ptCloud;
         Y = model_ptCloud;
         sigma = 5e-8;
@@ -121,15 +85,6 @@ parfor current_z = 1:loop_z
         [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
         cf_t_gmm2(current_t) = negativeLogLikelihood;
         
-%         % display what is happening
-%         delete(findobj('Tag', 'plot_Ubreveprime'));
-%         plot3( axes1, ...
-%                U_breve_prime(1,:), ...
-%                U_breve_prime(2,:), ...
-%                U_breve_prime(3,:), ...
-%                '.g', 'MarkerSize', 0.1, ...
-%                'Tag', 'plot_Ubreveprime');
-%         drawnow;
         
     end
     
@@ -137,13 +92,13 @@ parfor current_z = 1:loop_z
     cf_gmm(current_z, : )  = cf_t_gmm;
     cf_gmm2(current_z, : ) = cf_t_gmm2;
 end
+
 toc;
 
-%%
 [X,Y] = meshgrid(r_z, t_z);
 
 figure2 = figure(2);
-figure2.WindowState  = 'maximized';
+% figure2.WindowState  = 'maximized';
 
 subplot(1,3,1);
 surf(X,Y, cf_rmse);
@@ -165,3 +120,15 @@ xlabel('Rz (deg)');
 ylabel('tz (mm)');
 zlabel('GMM CPD distance');
 view(90, 90);
+
+
+minValue = min(cf_rmse(:));
+[costfunctions_min(trial, 1, 1), costfunctions_min(trial, 2, 1)] = find(cf_rmse == minValue);
+minValue = min(cf_gmm(:));
+[costfunctions_min(trial, 1, 2), costfunctions_min(trial, 2, 2)] = find(cf_gmm == minValue);
+minValue = min(cf_gmm2(:));
+[costfunctions_min(trial, 1, 3), costfunctions_min(trial, 2, 3)] = find(cf_gmm2 == minValue);
+
+end
+
+% save('results\test.mat', 'costfunctions_min');

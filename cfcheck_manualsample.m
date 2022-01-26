@@ -24,11 +24,11 @@ end
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_measure.mat');
+selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
 load(selectedpoint_str);
-U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]' ./ ptCloud_scale;
+U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
 % add isotropic zero-mean gaussian noise to U, simulating noise measuremen
-noise        = 2;
+noise        = 1;
 % random_noise = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
 random_noise = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
 U            = U + random_noise;
@@ -53,8 +53,6 @@ plot3( axes1, ...
        U(3,:), ...
        'or', ...
        'Tag', 'plot_U');
-% arrange view 
-view(axes1, 5, 80);
    
 %%
 
@@ -79,32 +77,29 @@ cf_rmse = zeros(length(r_z), length(t_z));
 tic;
 for current_z = 1:length(r_z)
     for current_t = 1:length(t_z)
-%         fprintf('%d %d\n', current_z, current_t);
+        fprintf('%d %d\n', current_z, current_t);
         
         % transform Ŭ with respected transformation
         U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
         scene_ptCloud = U_breve_prime';
         
-        % compute nearest index (and nearest distance) using knnsearch
-        [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
-        % store the mean distance
-        cf_rmse(current_z, current_t) = mean(nearest_dist);
+%         % RMSE
+%         [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
+%         cf_rmse(current_z, current_t) = mean(nearest_dist);
         
-%         if (downsample)
-%             scale = 0.00175;
-%         else
-%             scale = 0.00075;
-%         end
-% %         [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
-%         [f,~] =  GaussTransform(double(scene_ptCloud), double(model_ptCloud),  scale);
-%         cf_gmm(current_z, current_t) = -f;
+        % GMM L2 Distance
+        scale = 10e-4;
+        [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
+        cf_gmm(current_z, current_t) = mean(nearest_dist);
 
-        X = scene_ptCloud;
-        Y = model_ptCloud;
-        sigma = 1e-7;
-        w     = 1e-8;
-        [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
-        cf_gmm2(current_z, current_t) = negativeLogLikelihood;
+%         % GMM CPD Distance (?)
+%         X = scene_ptCloud;
+%         Y = model_ptCloud;
+%         sigma = 5e-8;
+%         w     = 5e-1;
+%         [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
+        cf_gmm2(current_z, current_t) = mean(nearest_dist);
+
         
 %         % display what is happening
 %         delete(findobj('Tag', 'plot_Ubreveprime'));

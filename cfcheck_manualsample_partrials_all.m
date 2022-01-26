@@ -108,8 +108,6 @@ for trial=1:num_trials
     minValue = min(cf_gmm2(:));
     [costfunctions_min(trial, 1, 3), costfunctions_min(trial, 2, 3)] = find(cf_gmm2 == minValue);
 
-    costfunctions_min
-
 end
 
-save('results\allcf_10_amode3_10.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode3_1.mat', 'costfunctions_min', 'r_z', 't_z');

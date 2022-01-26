@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_10_amode3_10.mat';
+filename='allcf_amode3_1.mat';
 load(filename);
 
 rmse = 1;
@@ -10,6 +10,9 @@ gmm2 = 3;
 middle = ceil(length(r_z)/2);
 costfunctions_min_normalized = costfunctions_min - middle;
 costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
+
+rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:)), t_z(costfunctions_min(:,2,:)) );
+rz_tz_mean = mean(abs(rz_tz_est), 1);
 
 figure1 = figure('Name', 'Min Cost Function', 'Position', [50 350 1250 350]);
 for i=1:3

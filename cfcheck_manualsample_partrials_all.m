@@ -44,7 +44,7 @@ t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
 % change z rotation to rotation matrix
 rs = [ r_z', zeros(length(r_z), 2) ];
 Rs = eul2rotm(deg2rad(rs), 'ZYX');
-% change z translation to translation vector
+% change z translation to trgitanslation vector
 ts = [ zeros(2, length(t_z)); t_z];
 
 % prepare variable to contains all rmse

@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_amode3_3.mat';
+filename='allcf_amode3_1.mat';
 load(filename);
 
 rmse = 1;
@@ -14,6 +14,8 @@ costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:)), t_z(costfunctions_min(:,2,:)) );
 rz_tz_mean = mean(abs(rz_tz_est), 1);
 rz_tz_median = median(abs(rz_tz_est), 1);
+disp(rz_tz_mean);
+disp(rz_tz_median);
 
 %%
 

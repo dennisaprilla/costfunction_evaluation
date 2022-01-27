@@ -15,9 +15,12 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
+% selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
+% load(selectedpoint_str);
+% U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
+selectedpoint_str = sprintf('data/bone/amode_measure.mat');
 load(selectedpoint_str);
-U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
+U = [vertcat(amode_prereg.Position)/ptCloud_scale; vertcat(amode_mid.Position)/ptCloud_scale]';
 
 % obtain all combination of z rotation and translation
 range = 8;
@@ -72,8 +75,13 @@ random_noise_special(:,:,8) = [ ...
                                 -0.000680254482290720	0.000428779054167571	0.000186196392532406	0.000861024684685878	0.000318222625613707	0.000550456179813374	0.000800921391902665	0.000280112506752310	0.000333439012092989	-0.000965937953655870	-4.24518260419149e-05	-0.000191730748099891	0.000378046138154629	-0.000661845744923359	0.000418279794833208; ...
                                 0.000462941430967641	-0.000756528715401839	-0.000460913589270358	1.57706170805919e-05	-0.000101655964310372	6.25235136876650e-05	0.000736302368051879	0.000778529259588922	-9.10785142166128e-05	0.000722835312392171	0.000139662987586339	-0.000560317362494831	-0.000657061233407718	-0.000587224458096992	-0.000736139900544583; ...
                                 ] ;
+random_noise_special(:,:,9) = [ ...
+                                -0.00223814423391117	0.000468184562965670	0.000361154307840780	-0.00157673946285752	-0.00227057787865099	-0.00164431025148370	-0.00155304333798509	0.00130455722368429	0.000627684363699330	0.00279680747857930	-0.000449658710854595	-0.00286931267082059	0.00216925834623951	8.38226853363757e-05	0.000398943725357912; ...
+                                0.000468995150035264	0.00135402503811264	-0.00133447694061305	-0.000786414018843390	-0.00167110570804883	0.00292972103283988	0.00115056897666090	-0.00131652326264648	-0.00247300684078218	0.00230646383820622	0.00213569063655730	-0.00101635891207926	-0.000348656978240224	0.00102179840562567	0.00116782737285598; ...
+                                0.000224020909089492	0.000777512013471322	-0.000559372825441494	-0.00265394166740608	-0.00213600305987733	0.00200793136964269	0.00243228889321071	0.00253298234960988	-1.23475871630333e-05	0.00286003616094475	-0.000274422554949453	-0.00173509139362874	0.000350921396945774	-0.00145019621687420	0.000661055488693038; ...
+                                ];
 
-noise        = 1;
+noise        = 3;
 num_trials   = 1;
 costfunctions_min = zeros(num_trials, 2); 
 
@@ -84,8 +92,8 @@ for trial=1:num_trials
     % add isotropic zero-mean gaussian noise to U, simulating noise measuremen
     % random_noise = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
     random_noise = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
-    model_ptCloud = (U + random_noise)';
-%     model_ptCloud = (U + random_noise_special(:,:,1))';
+%     model_ptCloud = (U + random_noise)';
+    model_ptCloud = (U + random_noise_special(:,:,1))';
 
 %     % plot Ŭ, the noiseless, complete, moving dataset
 %     figure1 = figure(1);
@@ -127,21 +135,24 @@ for trial=1:num_trials
             U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
             scene_ptCloud = U_breve_prime';
 
-%             % RMSE
-%             [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
-%             cf_t(current_t) = mean(nearest_dist);
+            % RMSE
+            [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
+            cf_t(current_t) = mean(nearest_dist);
 
-            % GMM L2 Distance
-            scale = 40e-4;
-%             scale = 47.5e-4;
-            [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
-            cf_t(current_t) = -f;
+%             % GMM L2 Distance
+%             scale = 40e-4;
+%             [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
+%             cf_t(current_t) = -f;
 
 %             % GMM CPD Distance (?)
 %             X = scene_ptCloud;
 %             Y = model_ptCloud;
-%             sigma = 9e-8;
-%             w     = 1e-90;
+% %             sigma = 9e-8;
+% %             w     = 1e-90;
+% %             sigma = 5e-7;
+% %             w     = 0.9999999999;
+%             sigma = 5e-7;
+%             w     = 0.9;
 %             [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
 %             cf_t(current_t) = negativeLogLikelihood;
 
@@ -166,6 +177,8 @@ for trial=1:num_trials
     % search min
     minValue = min(cf(:));
     [costfunctions_min(trial, 1), costfunctions_min(trial, 2)] = find(cf == minValue);
+
+    minValue
 
 end
 

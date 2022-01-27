@@ -17,16 +17,15 @@ addpath(genpath("D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB"));
 % random_noise  = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
 % U             = U + random_noise;
 
-
 % read the point cloud (bone) from STL/PLY file
 ptCloud          = stlread('data/bone/CT_Tibia_R.stl');
-ptCloud          = pcdownsample( pointCloud(ptCloud.Points), 'gridAverage', 0.001 );
 ptCloud_scale    = 1000;
-ptCloud_Npoints  = size(ptCloud.Location, 1);
-ptCloud_centroid = mean(ptCloud.Location, 1);
+ptCloud_Npoints  = size(ptCloud.Points,1);
+ptCloud_centroid = mean(ptCloud.Points, 1);
 % prepare Ŭ, the noiseless, complete, moving dataset
-U_breve          = ptCloud.Location - ptCloud_centroid;
+U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
+%{
 % sampling point from preregistration area, this while iteration is
 % making sure the selected sample points in each preregistration area
 selectedpoint_str = 'data/bone/amode_areasphere_443cm.mat';
@@ -74,41 +73,47 @@ end
 
 % combine the preregistration area from cell to matrix
 preregistrationArea = cell2mat(preregistrationArea');
+%}
+
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
+% selectedpoint_str = sprintf('data/bone/amode_measure.mat');
+% load(selectedpoint_str);
+% amode_samplePoints = [ amode_samplePoints; vertcat(amode_mid.Position)/ptCloud_scale];
 selectedpoint_str = sprintf('data/bone/amode_measure.mat');
 load(selectedpoint_str);
-amode_samplePoints = [ amode_samplePoints; vertcat(amode_mid.Position)/ptCloud_scale];
+amode_samplePoints = [vertcat(amode_prereg.Position)/ptCloud_scale; vertcat(amode_mid.Position)/ptCloud_scale];
 
 % add noise to scene point cloud
 noise              = 0;
-random_noise       = normrnd(0, noise/ptCloud_scale, [size(amode_samplePoints, 1), 3]);
-amode_samplePoints = amode_samplePoints + random_noise;
+% random_noise       = normrnd(0, noise/ptCloud_scale, [size(amode_samplePoints, 1), 3]);
+random_noise       = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(size(amode_samplePoints, 1), 3);
+% amode_samplePoints = amode_samplePoints + random_noise;
 
 
 %%
 
-% display the femure bone
-figure1 = figure(1);
-figure1.WindowState  = 'maximized';
-axes1 = axes('Parent', figure1);
-plot3( axes1, ...
-       U_breve(:,1), ...
-       U_breve(:,2), ...
-       U_breve(:,3), ...
-       '.', 'Color', [0.7 0.7 0.7], ...
-       'MarkerSize', 0.1, ...
-       'Tag', 'plot_bone_full');
-xlabel('X'); ylabel('Y'); zlabel('Z');
-grid on; axis equal; hold on;
-% plot a-mode sample points
-plot3( axes1, ...
-       amode_samplePoints(:,1), ...
-       amode_samplePoints(:,2), ...
-       amode_samplePoints(:,3), ...
-       'oy', 'MarkerFaceColor', 'y',...
-       'Tag', 'plot_bone_samplepoints');
+% % display the femure bone
+% figure1 = figure(1);
+% figure1.WindowState  = 'maximized';
+% axes1 = axes('Parent', figure1);
+% plot3( axes1, ...
+%        U_breve(:,1), ...
+%        U_breve(:,2), ...
+%        U_breve(:,3), ...
+%        '.', 'Color', [0.7 0.7 0.7], ...
+%        'MarkerSize', 0.1, ...
+%        'Tag', 'plot_bone_full');
+% xlabel('X'); ylabel('Y'); zlabel('Z');
+% grid on; axis equal; hold on;
+% % plot a-mode sample points
+% plot3( axes1, ...
+%        amode_samplePoints(:,1), ...
+%        amode_samplePoints(:,2), ...
+%        amode_samplePoints(:,3), ...
+%        'oy', 'MarkerFaceColor', 'y',...
+%        'Tag', 'plot_bone_samplepoints');
 
    
 %%
@@ -119,31 +124,25 @@ model_ptCloud = amode_samplePoints;
 % obtain all combination of z rotation and translation
 range  = 5;
 step   = 0.5;
-rz = (-range:step:range);
-tz = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
+r_z   = (-range:step:range);
+t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
 % change z rotation to rotation matrix
-rs = [ rz', zeros(length(rz), 2) ];
+rs = [ r_z', zeros(length(r_z), 2) ];
 Rs = eul2rotm(deg2rad(rs), 'ZYX');
 % change z translation to translation vector
-ts = [ zeros(2, length(tz)); tz];
+ts = [ zeros(2, length(t_z)); t_z];
 
 % prepare variable to contains all rmse
-cf_gmm  = zeros(length(rz), length(tz));
-cf_rmse = zeros(length(rz), length(tz));
+cf_gmm  = zeros(length(r_z), length(t_z));
+cf_rmse = zeros(length(r_z), length(t_z));
 
-for current_z = 1:length(rz)
-    for current_t = 1:length(tz)
+for current_z = 1:length(r_z)
+    for current_t = 1:length(t_z)
         fprintf('%d %d\n', current_z, current_t);
        
         % transform Ŭ with respected transformation
-        U_breve_prime = Rs(:,:,current_z) * U_breve' + ts(:,current_t);
+        U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
         scene_ptCloud = U_breve_prime';
-        
-% %         scale = 0.0010;
-%         scale = 0.001;
-%         [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
-%         f = -f;
-%         cf_gmm(current_z, current_t) = f;  
 
         % compute nearest index (and nearest distance) using knnsearch
         [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
@@ -153,7 +152,9 @@ for current_z = 1:length(rz)
     end
 end
 
-[X,Y] = meshgrid(rz, tz);
+%%
+
+[X,Y] = meshgrid(r_z, t_z);
 
 figure2 = figure(2);
 figure2.WindowState  = 'maximized';

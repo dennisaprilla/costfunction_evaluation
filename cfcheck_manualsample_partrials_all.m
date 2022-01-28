@@ -6,7 +6,7 @@ addpath(genpath('D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB\GaussTra
 %%
 
 % read the point cloud (bone) from STL/PLY file
-ptCloud          = stlread('data/bone/CT_Tibia_R.stl');
+ptCloud          = stlread('data/bone/CT_Femur_R.stl');
 ptCloud_scale    = 1000;
 ptCloud_Npoints  = size(ptCloud.Points,1);
 ptCloud_centroid = mean(ptCloud.Points, 1);
@@ -15,7 +15,7 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
+selectedpoint_str = sprintf('data/bone/amode_measure4.mat');
 load(selectedpoint_str);
 U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
     
@@ -30,8 +30,8 @@ Rs = eul2rotm(deg2rad(rs), 'ZYX');
 % change z translation to trgitanslation vector
 ts = [ zeros(2, length(t_z)); t_z];
 
-num_trials        = 1;
-noise             = 2;
+num_trials        = 1000;
+noise             = 1;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
 
@@ -72,8 +72,8 @@ for trial=1:num_trials
             cf_t_rmse(current_t) = mean(nearest_dist);
             
             % GMM L2 Distance
-            scale = 9e-4;
 %             scale = 40e-4;
+            scale = 30e-4;
             [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
             cf_t_gmm(current_t) = -f;
     
@@ -84,8 +84,10 @@ for trial=1:num_trials
 %             w     = 5e-1;
 %             sigma = 9e-8;
 %             w     = 1e-90;
-            sigma = 1e-7;
-            w     = 1e-10;
+%             sigma = 1e-7;
+%             w     = 1e-10;
+            sigma = 5e-7;
+            w     = 0.9;
             [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
             cf_t_gmm2(current_t) = negativeLogLikelihood;
             
@@ -108,29 +110,29 @@ for trial=1:num_trials
     
     %%
     
-    [X,Y] = meshgrid(r_z, t_z);
-
-    figure2 = figure(2);
-    figure2.WindowState  = 'maximized';
-    subplot(1,3,1);
-    surf(X,Y, cf_rmse);
-    title('RMSE');
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
-    subplot(1,3,2);
-    surf(X,Y, cf_gmm);
-    title(sprintf('GMM L2 Distance'));
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
-    subplot(1,3,3);
-    surf(X,Y, cf_gmm2);
-    title(sprintf('GMM Loglikelihood'));
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
+%     [X,Y] = meshgrid(r_z, t_z);
+% 
+%     figure2 = figure(2);
+%     figure2.WindowState  = 'maximized';
+%     subplot(1,3,1);
+%     surf(X,Y, cf_rmse);
+%     title('RMSE');
+%     xlabel('Rz (deg)');
+%     ylabel('tz (mm)');
+%     zlabel('Cost');
+%     subplot(1,3,2);
+%     surf(X,Y, cf_gmm);
+%     title(sprintf('GMM L2 Distance'));
+%     xlabel('Rz (deg)');
+%     ylabel('tz (mm)');
+%     zlabel('Cost');
+%     subplot(1,3,3);
+%     surf(X,Y, cf_gmm2);
+%     title(sprintf('GMM Loglikelihood'));
+%     xlabel('Rz (deg)');
+%     ylabel('tz (mm)');
+%     zlabel('Cost');
 
 end
 
-% save('results\allcf_amode3_3.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode4_1.mat', 'costfunctions_min', 'r_z', 't_z');

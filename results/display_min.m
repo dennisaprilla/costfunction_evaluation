@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_amode3_1.mat';
+filename='allcf_amode3_3.mat';
 load(filename);
 
 rmse = 1;
@@ -19,7 +19,7 @@ disp(rz_tz_median);
 
 %%
 
-figure1 = figure('Name', 'Min Cost Function', 'Position', [50 350 1250 350]);
+figure1 = figure('Name', 'Min Cost Function', 'Position', [20 100 1500 440]);
 for i=1:3
     subplot(1,3,i);
 %     plot(costfunctions_min_normalized(:,1,i), costfunctions_min_normalized(:,2,i), '.r');
@@ -38,15 +38,19 @@ end
 
 %%
 
-figure2 = figure('Name', 'Distance from Zero', 'Position', [70 350 1250 350]);
-for i=1:3
-    subplot(1,3,i);
-    histogram(costfunctions_min_magnitude(:,:,i), 10);
-end
+% figure2 = figure('Name', 'Distance from Zero', 'Position', [70 350 1250 350]);
+% for i=1:3
+%     subplot(1,3,i);
+%     histogram(costfunctions_min_magnitude(:,:,i), 10);
+% end
 
 %%
-figure3 = figure('Name', '3D Histogram', 'Position', [90 350 1250 350]);
+figure3 = figure('Name', '3D Histogram', 'Position', [20 100 1500 500]);
 for i=1:3
     subplot(1,3,i);
-    hist3(rz_tz_est(:,:,i), 'Nbins', [10 10], 'CDataMode','auto', 'FaceColor','interp');
+    hist3(rz_tz_est(:,:,i), 'Nbins', [10 10], 'CDataMode','auto', 'FaceColor','interp', 'FaceAlpha', 0.8);
 end
+
+
+
+

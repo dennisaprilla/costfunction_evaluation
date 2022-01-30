@@ -15,7 +15,7 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_measure4.mat');
+selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
 load(selectedpoint_str);
 U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
     

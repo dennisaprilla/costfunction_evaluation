@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_amode3_3.mat';
+filename='allcf_amode4_1.mat';
 load(filename);
 
 rmse = 1;

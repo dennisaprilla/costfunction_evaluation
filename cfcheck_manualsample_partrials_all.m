@@ -1,7 +1,7 @@
 clc; clear; close all;
 
-addpath(genpath('..\point_cloud_registration_evaluation'));
-addpath(genpath('D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB\GaussTransform'));
+addpath(genpath('..\pointcloudregistration_evaluations'));
+addpath(genpath('..\gmmreg\MATLAB'));
 
 %%
 
@@ -31,7 +31,7 @@ Rs = eul2rotm(deg2rad(rs), 'ZYX');
 ts = [ zeros(2, length(t_z)); t_z];
 
 num_trials        = 1000;
-noise             = 1;
+noise             = 2;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
 
@@ -135,4 +135,4 @@ for trial=1:num_trials
 
 end
 
-save('results\allcf_amode4_1.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode4_2.mat', 'costfunctions_min', 'r_z', 't_z');

@@ -7,6 +7,7 @@ addpath(genpath('..\gmmreg\MATLAB'));
 
 % read the point cloud (bone) from STL/PLY file
 ptCloud          = stlread('data/bone/CT_Femur_R.stl');
+% ptCloud          = stlread('data/bone/CT_Tibia_R.stl');
 ptCloud_scale    = 1000;
 ptCloud_Npoints  = size(ptCloud.Points,1);
 ptCloud_centroid = mean(ptCloud.Points, 1);
@@ -15,7 +16,7 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
+selectedpoint_str = sprintf('data/bone/amode_measure4.mat');
 load(selectedpoint_str);
 U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
     
@@ -30,7 +31,7 @@ Rs = eul2rotm(deg2rad(rs), 'ZYX');
 % change z translation to trgitanslation vector
 ts = [ zeros(2, length(t_z)); t_z];
 
-num_trials        = 1000;
+num_trials        = 500;
 noise             = 2;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
@@ -73,7 +74,7 @@ for trial=1:num_trials
             
             % GMM L2 Distance
 %             scale = 40e-4;
-            scale = 30e-4;
+            scale = 32.5e-4;
             [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
             cf_t_gmm(current_t) = -f;
     
@@ -135,4 +136,4 @@ for trial=1:num_trials
 
 end
 
-save('results\allcf_amode4_2.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode4_2a.mat', 'costfunctions_min', 'r_z', 't_z');

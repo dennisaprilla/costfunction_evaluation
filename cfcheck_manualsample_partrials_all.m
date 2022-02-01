@@ -31,8 +31,8 @@ Rs = eul2rotm(deg2rad(rs), 'ZYX');
 % change z translation to trgitanslation vector
 ts = [ zeros(2, length(t_z)); t_z];
 
-num_trials        = 500;
-noise             = 2;
+num_trials        = 1;
+noise             = 0;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
 
@@ -111,29 +111,32 @@ for trial=1:num_trials
     
     %%
     
-%     [X,Y] = meshgrid(r_z, t_z);
-% 
-%     figure2 = figure(2);
-%     figure2.WindowState  = 'maximized';
-%     subplot(1,3,1);
-%     surf(X,Y, cf_rmse);
-%     title('RMSE');
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
-%     subplot(1,3,2);
-%     surf(X,Y, cf_gmm);
-%     title(sprintf('GMM L2 Distance'));
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
-%     subplot(1,3,3);
-%     surf(X,Y, cf_gmm2);
-%     title(sprintf('GMM Loglikelihood'));
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
+    [X,Y] = meshgrid(r_z, t_z);
+
+    figure2 = figure(2);
+    figure2.WindowState  = 'maximized';
+    subplot(1,3,1);
+    surf(X,Y, cf_rmse);
+    view([-10, 10]);
+    title('RMSE');
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
+    subplot(1,3,2);
+    surf(X,Y, cf_gmm);
+    view([-10, 10]);
+    title(sprintf('GMM L2 Distance'));
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
+    subplot(1,3,3);
+    surf(X,Y, cf_gmm2);
+    view([-10, 10]);
+    title(sprintf('GMM Loglikelihood'));
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
 
 end
 
-save('results\allcf_amode4_2a.mat', 'costfunctions_min', 'r_z', 't_z');
+% save('results\allcf_amode4_2a.mat', 'costfunctions_min', 'r_z', 't_z');

@@ -20,6 +20,8 @@ selectedpoint_str = sprintf('data/bone/amode_measure4.mat');
 load(selectedpoint_str);
 U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
 
+clear ptCloud;
+
 %% Prepare Inlier Assumption
 
 threshold = 20 / ptCloud_scale;
@@ -30,6 +32,8 @@ for i=1:size(U,2)
     U_breve_inliers = [U_breve_inliers, U_breve(:, nearest_idx(i,nearest_dist(i,:)<threshold))];
 end
 U_breve_inliers = unique(U_breve_inliers', 'rows')';
+
+clear U_breve;
 
 %% Simulate Search Space
     
@@ -46,7 +50,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 %% Trials
 
-num_trials        = 1;
+num_trials        = 100;
 noise             = 1;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
@@ -153,4 +157,4 @@ for trial=1:num_trials
 
 end
 
-% save('results\allcf_amode4_1_inlier.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode4_1_inlier.mat', 'costfunctions_min', 'r_z', 't_z');

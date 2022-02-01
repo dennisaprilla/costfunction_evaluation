@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_amode4_2.mat';
+filename='allcf_amode4_1_inlier.mat';
 load(filename);
 
 rmse = 1;

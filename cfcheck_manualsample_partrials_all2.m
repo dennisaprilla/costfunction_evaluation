@@ -50,7 +50,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 %% Trials
 
-num_trials        = 100;
+num_trials        = 500;
 noise             = 1;
 num_costfunction  = 3;
 costfunctions_min = zeros(num_trials, 2, num_costfunction); 
@@ -95,7 +95,7 @@ for trial=1:num_trials
             
             % GMM L2 Distance
 %             scale = 40e-4;
-            scale = 37.5e-4;
+            scale = 35e-4;
             [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
             cf_t_gmm(current_t) = -f;
     

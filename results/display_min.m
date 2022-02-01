@@ -1,6 +1,6 @@
 clear; close all;
 
-filename='allcf_amode4_1.mat';
+filename='allcf_amode4_2.mat';
 load(filename);
 
 rmse = 1;
@@ -13,9 +13,11 @@ costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 
 rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:)), t_z(costfunctions_min(:,2,:)) );
 rz_tz_mean = mean(abs(rz_tz_est), 1);
-rz_tz_median = median(abs(rz_tz_est), 1);
+rz_tz_std = std(abs(rz_tz_est), 1);
+disp("mean");
 disp(rz_tz_mean);
-disp(rz_tz_median);
+disp("std");
+disp(rz_tz_std);
 
 %%
 
@@ -31,8 +33,7 @@ for i=1:3
     rectangle('Position', [-1 -0.001 2 0.002], 'EdgeColor', 'g')
     rectangle('Position', [-2 -0.002 4 0.004], 'EdgeColor', 'r')
     xlim([r_z(1) r_z(end)]);
-    ylim([t_z(1) t_z(end)]);
-    xlabel('Rotation Error (deg)');
+    ylim([t_z(1) t_z(end)]);    xlabel('Rotation Error (deg)');
     ylabel('Translation Error (mm)');
 end
 
@@ -50,7 +51,3 @@ for i=1:3
     subplot(1,3,i);
     hist3(rz_tz_est(:,:,i), 'Nbins', [10 10], 'CDataMode','auto', 'FaceColor','interp', 'FaceAlpha', 0.8);
 end
-
-
-
-

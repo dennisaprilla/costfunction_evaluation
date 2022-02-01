@@ -157,4 +157,4 @@ for trial=1:num_trials
 
 end
 
-save('results\allcf_amode4_1_inlier.mat', 'costfunctions_min', 'r_z', 't_z');
+save('results\allcf_amode4_1_inlier250.mat', 'costfunctions_min', 'r_z', 't_z');

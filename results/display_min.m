@@ -1,7 +1,7 @@
 clear; close all;
 
 % filename='allcf_amode4_1_inlier.mat';
-filename='data\allcf_amode4_2.mat';
+filename='rmsegmm_tibia30_2.mat';
 load(filename);
 
 rmse = 1;
@@ -24,18 +24,19 @@ disp(rz_tz_std);
 
 figure1 = figure('Name', 'Min Cost Function', 'Position', [20 100 1500 440]);
 for i=1:3
+
     subplot(1,3,i);
-%     plot(costfunctions_min_normalized(:,1,i), costfunctions_min_normalized(:,2,i), '.r');
-%     grid on; axis equal;
-%     xlim([-middle middle]);
-%     ylim([-middle middle]);
     plot(rz_tz_est(:,1,i), rz_tz_est(:,2,i), '.b');
     grid on; hold on;
+
     rectangle('Position', [-1 -0.001 2 0.002], 'EdgeColor', 'g')
     rectangle('Position', [-2 -0.002 4 0.004], 'EdgeColor', 'r')
+
     xlim([r_z(1) r_z(end)]);
-    ylim([t_z(1) t_z(end)]);    xlabel('Rotation Error (deg)');
+    ylim([t_z(1) t_z(end)]);
+    xlabel('Rotation Error (deg)');
     ylabel('Translation Error (mm)');
+    
 end
 
 %%

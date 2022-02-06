@@ -30,7 +30,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 noises            = [1 2 3];
 pointcounts       = [15 20 25 30];
-num_trials        = 150;
+num_trials         = 150;
 
 costfunction_name  = "gmm";
 costfunction_scale = 40;
@@ -79,10 +79,16 @@ for pointcount=1:length(pointcounts)
                     U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
                     scene_ptCloud = U_breve_prime';
                     
+                    %{
                     % GMM L2 Distance
                     scale = costfunction_scale * 1e-4;
                     [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
                     cf_temp(current_t) = -f;
+                    %}
+
+                    % RMSE
+                    [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
+                    cf_temp(current_t) = mean(nearest_dist);
                     
                 end
                 

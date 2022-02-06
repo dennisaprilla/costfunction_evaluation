@@ -30,10 +30,10 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 noises            = [1 2 3];
 pointcounts       = [15 20 25 30];
-num_trials        = 750;
+num_trials        = 150;
 
 costfunction_name  = "gmm";
-costfunction_scale = 20;
+costfunction_scale = 40;
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
 
 for pointcount=1:length(pointcounts)
@@ -99,7 +99,7 @@ for pointcount=1:length(pointcounts)
         % end trials
         end
 
-        filename = sprintf('results\\tibia_%s_scale%d.mat', costfunction_name, costfunction_scale);
+        filename = sprintf('results\\tibia_%s_scale%d_%d.mat', costfunction_name, costfunction_scale, num_trials);
         save(filename, 'costfunctions_min', 'r_z', 't_z');
 
     % end noises

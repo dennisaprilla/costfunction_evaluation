@@ -105,7 +105,7 @@ for pointcount=1:length(pointcounts)
         % end trials
         end
 
-        filename = sprintf('results\\tibia_%s_scale%d_%d.mat', costfunction_name, costfunction_scale, num_trials);
+        filename = sprintf('results\\tibia_%s_%d.mat', costfunction_name, num_trials);
         save(filename, 'costfunctions_min', 'r_z', 't_z');
 
     % end noises

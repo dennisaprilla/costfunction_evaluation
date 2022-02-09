@@ -1,22 +1,36 @@
 clear; close all
-
 addpath('..\functions\display\subaxis');
 
+% load the data
 % filename='tibia_gmm_scale20';
 % filename='tibia_gmm_scale30';
 % filename='tibia_gmm_scale40';
 filename='tibia_rmse';
 load(strcat(filename, '.mat'));
 
+% setup the noises (this is supposed to be given from the mat file, but i
+% forgot to save it.
 noises            = [1 2 3];
 pointcounts       = [15 20 25 30];
 
+% calculate the magnitude (maybe it will be used, or not)
 middle = ceil(length(r_z)/2);
 costfunctions_min_normalized = costfunctions_min - middle;
 costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 
-rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:)) );
+% costfunctions_min contains index of the search-space matrix, let's
+% convert it to real rz and tz value
+rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:))*1000 );
+% rz_tz_abs  = abs(rz_tz_est);
+% rz_tz_mean = mean(rz_tz_abs, 1);
+% rz_tz_std  = std(rz_tz_abs, 1);
+% disp(rz_tz_std(:,:,:,1));
 
+
+%%
+
+
+% setup configuration for the loop for the display
 n_noises    = size(costfunctions_min, 3);
 n_numpoints = size(costfunctions_min, 4);
 figure1     = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
@@ -49,11 +63,13 @@ for current_noise=1:n_noises
     end
 end
 
-% save picture to png
-saveas(figure1, sprintf('pictures/%s', filename), 'png');
-% save picture to pdf
-% https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
-set(figure1,'Units','Inches');
-pos = get(figure1,'Position');
-set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
-print(figure1, sprintf('pictures/%s', filename),'-dpdf','-r0');
+% % save picture to png
+% saveas(figure1, sprintf('pictures/%s', filename), 'png');
+% % save picture to pdf
+% % https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
+% set(figure1,'Units','Inches');
+% pos = get(figure1,'Position');
+% set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
+% print(figure1, sprintf('pictures/%s', filename),'-dpdf','-r0');
+
+

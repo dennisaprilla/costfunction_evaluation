@@ -29,11 +29,11 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation
 
 noises            = [1 2 3];
-pointcounts       = [15 20 25 30];
-num_trials         = 550;
+pointcounts       = [30];
+num_trials        = 750;
 
 costfunction_name  = "gmm";
-costfunction_scale = 10;
+costfunction_scale = 40;
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
 
 for pointcount=1:length(pointcounts)
@@ -41,12 +41,18 @@ for pointcount=1:length(pointcounts)
     current_pointcount = pointcounts(pointcount);
     % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
     % These a-mode simulated measurement is manually selected from the bone model.
+    %{
     selectedpoint_str = sprintf('data/bone/amode_tibia_%d.mat', current_pointcount);
     load(selectedpoint_str);
     U = [ vertcat(amode_prereg1.Position); ...
           vertcat(amode_prereg2.Position); ...
           vertcat(amode_prereg3.Position); ...
           vertcat(amode_mid.Position)]';
+    %}
+    selectedpoint_str = sprintf('data/bone/amode_tibia_%dwd.mat', current_pointcount);
+    load(selectedpoint_str);
+    U = [ vertcat(amode_medial.Position); ...
+          vertcat(amode_lateral.Position) ]';
 
     for noise=1:length(noises)
 
@@ -107,7 +113,7 @@ for pointcount=1:length(pointcounts)
         % end trials
         end
 
-        filename = sprintf('results\\tibia_%s_scale%d_%d.mat', costfunction_name, costfunction_scale, num_trials);
+        filename = sprintf('results\\tibia_%swd_scale%d_%d.mat', costfunction_name, costfunction_scale, num_trials);
         save(filename, 'costfunctions_min', 'r_z', 't_z');
 
     % end noises

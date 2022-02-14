@@ -1,17 +1,14 @@
 clear; close all
 addpath('..\functions\display\subaxis');
 
-% load the data
-% filename='tibia_gmm_scale20';
-% filename='tibia_gmm_scale30';
-% filename='tibia_gmm_scale40';
-filename='tibia_rmse';
-load(strcat(filename, '.mat'));
+% load the data;
+filenames        = {'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
+current_filename = filenames{3};
+load(strcat(current_filename, '.mat'));
 
-% setup the noises (this is supposed to be given from the mat file, but i
-% forgot to save it.
-noises            = [1 2 3];
-pointcounts       = [15 20 25 30];
+% get the information from the trials
+noises            = trialsdesc.noises;
+pointcounts       = trialsdesc.pointcounts;
 
 % calculate the magnitude (maybe it will be used, or not)
 middle = ceil(length(r_z)/2);
@@ -19,57 +16,83 @@ costfunctions_min_normalized = costfunctions_min - middle;
 costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 
 % costfunctions_min contains index of the search-space matrix, let's
-% convert it to real rz and tz value
-rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:))*1000 );
-% rz_tz_abs  = abs(rz_tz_est);
-% rz_tz_mean = mean(rz_tz_abs, 1);
-% rz_tz_std  = std(rz_tz_abs, 1);
-% disp(rz_tz_std(:,:,:,1));
+% convert it to real rz and tz value (r_z and t_z is available in mat file)
+rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:)) );
 
+% if you have shifting constant data, let use_shiftingconstant value to true
+use_shiftingconstant = true;
+if (use_shiftingconstant)
+    % load the shifting constant
+    filename_shiftingconstant = sprintf('results\\%s_shiftingconstant.mat', current_filename);
+    load(filename_shiftingconstant);
+    % create different name for figure which uses shifting constant
+    filename_forsaving = sprintf('%s+sc', current_filename);
+else
+    filename_forsaving = current_filename;
+end
 
 %%
 
+% setup for the figure
+figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
+subplot_idx   = 1;
 
-% setup configuration for the loop for the display
-n_noises    = size(costfunctions_min, 3);
-n_numpoints = size(costfunctions_min, 4);
-figure1     = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
-subplot_idx = 1;
-
-for current_noise=1:n_noises
-    for current_numpoints=1:n_numpoints
+% loop for all noises (figure's row)
+for noise=1:length(noises)
+    
+    % loop for all point set configuration (figure's column)
+    for pointcount=1:length(pointcounts)
+        
+        current_pointcount = pointcounts(pointcount);
+        
+        % is this simulation use shifting constant?
+        if (use_shiftingconstant)
+            current_shiftingconstant = shiftingconstant(current_pointcount);
+        else
+            current_shiftingconstant = [0 0]';
+        end
+        
+        % setting up the figure
         subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
         
+        % make a scatter plot
         scatter_size = 10;
-        scatter( rz_tz_est(:,1,current_noise, current_numpoints), rz_tz_est(:,2,current_noise, current_numpoints), ...
-                 scatter_size, costfunctions_min_magnitude(:, 1, current_noise, current_numpoints), 'filled');
+        rz_est = rz_tz_est(:,1,noise, pointcount) - current_shiftingconstant(1);
+        tz_est = rz_tz_est(:,2,noise, pointcount) - current_shiftingconstant(2);
+        scatter( rz_est, tz_est, ...
+                 scatter_size, costfunctions_min_magnitude(:, 1, noise, pointcount), 'filled');
         grid on; hold on;
+        % draw a rectangle to show the error limit
         rectangle('Position', [-1 -0.001 2 0.002], 'EdgeColor', 'g');
         rectangle('Position', [-2 -0.002 4 0.004], 'EdgeColor', 'r');
         
-        if (current_noise==1)
-            title(sprintf('%d Points', pointcounts(current_numpoints)));
+        % title will be shown only in the first row of figure
+        if (noise==1)
+            title(sprintf('%d Points', pointcounts(pointcount)));
         end
         
-        if (current_numpoints==1)
-            ylabel(sprintf('Noise %d', noises(current_noise)), 'fontweight','bold');
+        % ylabel will be shown only in the first column of figure
+        if (pointcount==1)
+            ylabel(sprintf('Noise %d', noises(noise)), 'fontweight','bold');
         end
         
+        % limit the plots so everything is in the same scale
         xlim([r_z(1) r_z(end)]);
         ylim([t_z(1) t_z(end)]);
         
+        % increment the subplot index
         subplot_idx = subplot_idx+1;
         
     end
 end
 
 % % save picture to png
-% saveas(figure1, sprintf('pictures/%s', filename), 'png');
+% saveas(figure1, sprintf('pictures/%s', filename_forsaving), 'png');
 % % save picture to pdf
 % % https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
 % set(figure1,'Units','Inches');
 % pos = get(figure1,'Position');
 % set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
-% print(figure1, sprintf('pictures/%s', filename),'-dpdf','-r0');
+% print(figure1, sprintf('pictures/%s', filename_forsaving),'-dpdf','-r0');
 
 

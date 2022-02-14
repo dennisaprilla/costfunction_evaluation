@@ -1,9 +1,9 @@
-clear; close all
+clear; close all; clc;
 addpath('..\functions\display\subaxis');
 
 % load the data
-filenames={'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
-% filenames={'tibia_gmm_scale20'};
+% filenames={'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
+filenames={'tibia_gmm_scale40'};
 
 data = [];
 for file=1:length(filenames)
@@ -23,7 +23,8 @@ for file=1:length(filenames)
 
     % costfunctions_min contains index of the search-space matrix, let's
     % convert it to real rz and tz value
-    rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:))*1000 );
+    tz_scale   = 1000;
+    rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:))*tz_scale );
 
     rz_tz_mean    = mean(rz_tz_est, 1);
     rz_tz_meanabs = mean(abs(rz_tz_est), 1);

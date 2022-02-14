@@ -16,7 +16,7 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 %% Simulate Search Space
 
 % obtain all combination of z rotation and translation
-range = 12;
+range = 10;
 step  = 0.25;
 r_z   = (-range:step:range);
 t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
@@ -30,8 +30,8 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 % setup the simulation configuration
 noises             = [1 2 3];
-pointcounts        = [30];
-num_trials         = 1;
+pointcounts        = [15 20 25 30];
+num_trials         = 750;
 costfunction_name  = "gmm";
 costfunction_scale = 40;
 
@@ -46,9 +46,7 @@ else
     trialsdesc.costfunction_scale  = NaN;
 end
 
-% naming filename
-% filename_forsave = sprintf('tibia_%s_scale%d', costfunction_name, costfunction_scale);
-filename_forsave = sprintf('tibia_%s_scale%d_wd', costfunction_name, costfunction_scale);
+filename = sprintf('tibia_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
@@ -133,7 +131,7 @@ for pointcount=1:length(pointcounts)
         end
         
         % i put save here, just in case the pc is overheating
-        save(filename_forsave, 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        save(sprintf('results\\%s.mat', filename), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
 
     % end noises
     end

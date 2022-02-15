@@ -32,7 +32,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 noises             = [1 2 3];
 pointcounts        = [30];
 num_trials         = 500;
-costfunction_name  = "rmse";
+costfunction_name  = "gmm";
 costfunction_scale = 40;
 
 % save the configuration to a structure
@@ -49,7 +49,7 @@ end
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
 % naming the filename for result
-filename_simresult = sprintf('tibiawd1_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
+filename_simresult = sprintf('tibiawd2_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 
 % loop over all of the pointcount configuration
 for pointcount=1:length(pointcounts)
@@ -68,7 +68,7 @@ for pointcount=1:length(pointcounts)
           vertcat(amode_mid.Position)]';
     %}
     %
-    filename_amodedata = sprintf('amodewd_tibia1_%d', current_pointcount);
+    filename_amodedata = sprintf('amodewd_tibia2_%d', current_pointcount);
     filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
     load(filepath_amodedata);
     U = vertcat(amode_all.Position)';  

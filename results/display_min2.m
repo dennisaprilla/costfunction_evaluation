@@ -4,7 +4,7 @@ addpath('..\functions\display\subaxis');
 % load the data;
 % filenames        = {'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
 filenames        = {'tibiawd1_gmm_scale40_500', 'tibiawd1_rmse_500'};
-current_filename = filenames{2};
+current_filename = filenames{1};
 load(strcat(current_filename, '.mat'));
 
 % get the information from the trials
@@ -36,7 +36,7 @@ end
 
 % setup for the figure
 % figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
-figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 225 700]);
+figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 250 700]);
 subplot_idx   = 1;
 
 % loop for all noises (figure's row)
@@ -56,7 +56,7 @@ for noise=1:length(noises)
         
         % setting up the figure
         % subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
-        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.175,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
+        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
         
         % make a scatter plot
         scatter_size = 10;

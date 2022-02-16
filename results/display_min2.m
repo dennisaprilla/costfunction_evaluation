@@ -1,9 +1,10 @@
-clear; close all
+clear;
 addpath('..\functions\display\subaxis');
 
 % load the data;
-filenames        = {'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
-current_filename = filenames{3};
+% filenames        = {'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
+filenames        = {'tibiawd1_gmm_scale40_500', 'tibiawd1_rmse_500'};
+current_filename = filenames{2};
 load(strcat(current_filename, '.mat'));
 
 % get the information from the trials
@@ -20,10 +21,10 @@ costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:)) );
 
 % if you have shifting constant data, let use_shiftingconstant value to true
-use_shiftingconstant = true;
+use_shiftingconstant = false;
 if (use_shiftingconstant)
     % load the shifting constant
-    filename_shiftingconstant = sprintf('results\\%s_shiftingconstant.mat', current_filename);
+    filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', current_filename);
     load(filename_shiftingconstant);
     % create different name for figure which uses shifting constant
     filename_forsaving = sprintf('%s+sc', current_filename);
@@ -34,7 +35,8 @@ end
 %%
 
 % setup for the figure
-figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
+% figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
+figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 225 700]);
 subplot_idx   = 1;
 
 % loop for all noises (figure's row)
@@ -53,7 +55,8 @@ for noise=1:length(noises)
         end
         
         % setting up the figure
-        subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
+        % subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
+        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.175,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
         
         % make a scatter plot
         scatter_size = 10;
@@ -86,13 +89,13 @@ for noise=1:length(noises)
     end
 end
 
-% % save picture to png
-% saveas(figure1, sprintf('pictures/%s', filename_forsaving), 'png');
-% % save picture to pdf
-% % https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
-% set(figure1,'Units','Inches');
-% pos = get(figure1,'Position');
-% set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
-% print(figure1, sprintf('pictures/%s', filename_forsaving),'-dpdf','-r0');
+% save picture to png
+saveas(figure1, sprintf('pictures/%s', filename_forsaving), 'png');
+% save picture to pdf
+% https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
+set(figure1,'Units','Inches');
+pos = get(figure1,'Position');
+set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
+print(figure1, sprintf('pictures/%s', filename_forsaving),'-dpdf','-r0');
 
 

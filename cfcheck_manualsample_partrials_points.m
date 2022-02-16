@@ -31,7 +31,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 % setup the simulation configuration
 noises             = [1 2 3];
 pointcounts        = [15 20 25 30];
-num_trials         = 3;
+num_trials         = 750;
 costfunction_name  = "gmm";
 costfunction_scale = 40;
 

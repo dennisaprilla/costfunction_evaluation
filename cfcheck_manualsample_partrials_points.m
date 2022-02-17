@@ -68,7 +68,7 @@ for pointcount=1:length(pointcounts)
           vertcat(amode_mid.Position)]';
     %}
     %
-    filename_amodedata = sprintf('amodewd_tibia2_%d', current_pointcount);
+    filename_amodedata = sprintf('amode_tibiawd2_%d', current_pointcount);
     filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
     load(filepath_amodedata);
     U = vertcat(amode_all.Position)';  

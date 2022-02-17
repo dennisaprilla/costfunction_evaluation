@@ -1,7 +1,7 @@
 clear; close all; clc;
 
-filenames={'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
-% filenames={'tibia_gmm_scale40'};
+% filenames={'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse_scaleNaN'};
+filenames={'tibia_gmm_scale40'};
 
 for file=1:length(filenames)
     

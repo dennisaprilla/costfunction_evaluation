@@ -1,10 +1,17 @@
+% NOTE: 
+% filenaming must be: <bone>_<costfunction>_<param>.mat
+% if it is a testset: <bone>_<costfunction>_<param>_testset.mat
 clear;
 addpath('..\functions\display\subaxis');
 
+%%
+
 % load the data;
-% filenames        = {'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_rmse'};
-filenames        = {'tibiawd1_gmm_scale40_500', 'tibiawd1_rmse_500'};
-current_filename = filenames{1};
+filenames            = {'tibia_gmm_scale10', 'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_gmm_scale50', 'tibia_rmse_scaleNaN'};
+% filenames            = {'tibiawd1_gmm_scale40_500', 'tibiawd1_rmse_500'};
+% filenames            = {'tibia_gmm_scale40', 'tibia_gmm_scale40_testset'};
+current_filename     = filenames{4};
+use_shiftingconstant = false;
 load(strcat(current_filename, '.mat'));
 
 % get the information from the trials
@@ -21,10 +28,15 @@ costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
 rz_tz_est  = cat(2, r_z(costfunctions_min(:,1,:,:)), t_z(costfunctions_min(:,2,:,:)) );
 
 % if you have shifting constant data, let use_shiftingconstant value to true
-use_shiftingconstant = false;
 if (use_shiftingconstant)
     % load the shifting constant
-    filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', current_filename);
+    newStr = split(current_filename, '_');
+    if(length(newStr)==3)
+        filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', current_filename);
+    else
+        temp = strjoin(newStr(1:3), '_');
+        filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', temp);
+    end
     load(filename_shiftingconstant);
     % create different name for figure which uses shifting constant
     filename_forsaving = sprintf('%s+sc', current_filename);
@@ -55,14 +67,14 @@ for noise=1:length(noises)
         end
         
         % setting up the figure
-        % subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
-        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
+        subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
+        % subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
         
         % make a scatter plot
         scatter_size = 10;
         rz_est = rz_tz_est(:,1,noise, pointcount) - current_shiftingconstant(1);
         tz_est = rz_tz_est(:,2,noise, pointcount) - current_shiftingconstant(2);
-        scatter( rz_est, tz_est, ...
+        scatter( rz_est, tz_est, ...    
                  scatter_size, costfunctions_min_magnitude(:, 1, noise, pointcount), 'filled');
         grid on; hold on;
         % draw a rectangle to show the error limit

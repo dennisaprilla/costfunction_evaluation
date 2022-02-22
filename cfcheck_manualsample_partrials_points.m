@@ -49,7 +49,7 @@ end
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
 % naming the filename for result
-filename_simresult = sprintf('tibia30a_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
+filename_simresult = sprintf('tibia30c_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 
 % loop over all of the pointcount configuration
 for pointcount=1:length(pointcounts)
@@ -68,7 +68,7 @@ for pointcount=1:length(pointcounts)
           vertcat(amode_mid.Position)]';
     %}
     %
-    filename_amodedata = sprintf('amode_tibia_%d_a', current_pointcount);
+    filename_amodedata = sprintf('amode_tibia_%d_c', current_pointcount);
     filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
     load(filepath_amodedata);
     U = vertcat(amode_all.Position)';  

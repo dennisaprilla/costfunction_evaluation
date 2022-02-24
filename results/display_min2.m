@@ -7,12 +7,13 @@ addpath('..\functions\display\subaxis');
 %%
 
 % load the data;
-filenames            = {'tibia_gmm_scale10', 'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_gmm_scale50', 'tibia_rmse_scaleNaN'};
-% filenames            = {'tibiawd1_gmm_scale40_500', 'tibiawd1_rmse_500'};
+path                 = 'inaccessible_sim2';
+% filenames            = {'tibia_gmm_scale10', 'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_gmm_scale50', 'tibia_rmse_scaleNaN'};
 % filenames            = {'tibia_gmm_scale40', 'tibia_gmm_scale40_testset'};
-current_filename     = filenames{4};
+filenames            = {'tibia30a_gmm_scale40', 'tibia30c_gmm_scale40'};
+current_filename     = filenames{2};
 use_shiftingconstant = false;
-load(strcat(current_filename, '.mat'));
+load(strcat(path, filesep, current_filename, '.mat'));
 
 % get the information from the trials
 noises            = trialsdesc.noises;
@@ -67,8 +68,8 @@ for noise=1:length(noises)
         end
         
         % setting up the figure
-        subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
-        % subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
+        % subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
+        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
         
         % make a scatter plot
         scatter_size = 10;
@@ -87,7 +88,8 @@ for noise=1:length(noises)
         end
         
         % ylabel will be shown only in the first column of figure
-        if (pointcount==1)
+        % if (pointcount==1)
+        if (pointcount==4)
             ylabel(sprintf('Noise %d', noises(noise)), 'fontweight','bold');
         end
         

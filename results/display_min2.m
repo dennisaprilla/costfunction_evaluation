@@ -1,16 +1,14 @@
 % NOTE: 
 % filenaming must be: <bone>_<costfunction>_<param>.mat
 % if it is a testset: <bone>_<costfunction>_<param>_testset.mat
-clear;
+clear; close all;
 addpath('..\functions\display\subaxis');
 
 %%
 
 % load the data;
-path                 = 'inaccessible_sim2';
-% filenames            = {'tibia_gmm_scale10', 'tibia_gmm_scale20', 'tibia_gmm_scale30', 'tibia_gmm_scale40', 'tibia_gmm_scale50', 'tibia_rmse_scaleNaN'};
-% filenames            = {'tibia_gmm_scale40', 'tibia_gmm_scale40_testset'};
-filenames            = {'tibia30a_gmm_scale40', 'tibia30c_gmm_scale40'};
+path                 = 'accessible_sim2';
+filenames            = {'tibia_gmm_scale20', 'tibia_gmm_scale40'};
 current_filename     = filenames{2};
 use_shiftingconstant = false;
 load(strcat(path, filesep, current_filename, '.mat'));
@@ -48,8 +46,9 @@ end
 %%
 
 % setup for the figure
+figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 1250 700]);
 % figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 900 700]);
-figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 250 700]);
+% figure1       = figure('Name', 'Min Cost Function', 'Position', [50 50 250 700]);
 subplot_idx   = 1;
 
 % loop for all noises (figure's row)
@@ -68,8 +67,8 @@ for noise=1:length(noises)
         end
         
         % setting up the figure
-        % subaxis(3,4, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
-        subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
+        subaxis(3,5, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.075,'MarginRight',0.01,'MarginTop',0.05,'MarginBottom',0.05 );
+        % subaxis(3,1, subplot_idx, 'Spacing', 0.05, 'MarginLeft',0.275,'MarginRight',0.040,'MarginTop',0.05,'MarginBottom',0.05 );
         
         % make a scatter plot
         scatter_size = 10;
@@ -88,8 +87,8 @@ for noise=1:length(noises)
         end
         
         % ylabel will be shown only in the first column of figure
-        % if (pointcount==1)
-        if (pointcount==4)
+        if (pointcount==1)
+        % if (pointcount==4)
             ylabel(sprintf('Noise %d', noises(noise)), 'fontweight','bold');
         end
         
@@ -104,12 +103,12 @@ for noise=1:length(noises)
 end
 
 % save picture to png
-saveas(figure1, sprintf('pictures/%s', filename_forsaving), 'png');
+saveas(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, path, filesep, filename_forsaving), 'png');
 % save picture to pdf
 % https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
 set(figure1,'Units','Inches');
 pos = get(figure1,'Position');
 set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
-print(figure1, sprintf('pictures/%s', filename_forsaving),'-dpdf','-r0');
+print(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, path, filesep, filename_forsaving),'-dpdf','-r0');
 
 

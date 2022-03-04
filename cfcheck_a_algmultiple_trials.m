@@ -16,14 +16,12 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_tibia_30.mat');
+selectedpoint_str = sprintf('data/bone/amode_accessible_sim1/amode_tibia_20.mat');
 load(selectedpoint_str);
-% U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
 U = [ vertcat(amode_prereg1.Position); ...
       vertcat(amode_prereg2.Position); ...
       vertcat(amode_prereg3.Position); ...
-      vertcat(amode_mid1.Position); ...
-      vertcat(amode_mid2.Position)]';
+      vertcat(amode_mid.Position) ]';
 
     
 % obtain all combination of z rotation and translation
@@ -50,6 +48,29 @@ for trial=1:num_trials
     % random_noise = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
     random_noise  = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
     model_ptCloud = (U + random_noise)';
+    
+    %{
+    % plot Ŭ, the noiseless, complete, moving dataset
+    figure1 = figure(1);
+    figure1.WindowState  = 'maximized';
+    axes1 = axes('Parent', figure1);
+    plot3( axes1, ...
+           U_breve(1,:), ...
+           U_breve(2,:), ...
+           U_breve(3,:), ...
+           '.', 'Color', [0.7 0.7 0.7],...
+           'MarkerSize', 0.1, ...
+           'Tag', 'plot_Ubreve');
+    xlabel('X'); ylabel('Y');
+    grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
+    % plot U, the noisy, incomplete, moving dataset
+    plot3( axes1, ...
+           U(1,:), ...
+           U(2,:), ...
+           U(3,:), ...
+           'or', ...
+           'Tag', 'plot_U');
+    %}
        
     %%
     
@@ -79,25 +100,18 @@ for trial=1:num_trials
             cf_t_rmse(current_t) = mean(nearest_dist);
             
             % GMM L2 Distance
-%             scale = 40e-4;
-            scale = 20e-4;
+            scale = 40e-4;
             [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
             cf_t_gmm(current_t) = -f;
     
-%             % GMM CPD Distance (?)
-%             X = scene_ptCloud;
-%             Y = model_ptCloud;
-% %             sigma = 5e-8;
-% %             w     = 5e-1;
-% %             sigma = 9e-8;
-% %             w     = 1e-90;
-% %             sigma = 1e-7;
-% %             w     = 1e-10;
-%             sigma = 5e-7;
-%             w     = 0.9;
-%             [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
-%             cf_t_gmm2(current_t) = negativeLogLikelihood;
-            
+            % GMM CPD Distance (?)
+            X = scene_ptCloud;
+            Y = model_ptCloud;
+            % sigma = 5e-8; w = 5e-1;
+            % sigma = 9e-8; w = 1e-90;
+            sigma = 1e-7; w = 1e-10;
+            [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
+            cf_t_gmm2(current_t) = negativeLogLikelihood;            
             
         end
         
@@ -112,36 +126,37 @@ for trial=1:num_trials
     [costfunctions_min(trial, 1, 1), costfunctions_min(trial, 2, 1)] = find(cf_rmse == minValue);
     minValue = min(cf_gmm(:));
     [costfunctions_min(trial, 1, 2), costfunctions_min(trial, 2, 2)] = find(cf_gmm == minValue);
-%     minValue = min(cf_gmm2(:));
-%     [costfunctions_min(trial, 1, 3), costfunctions_min(trial, 2, 3)] = find(cf_gmm2 == minValue);
+    minValue = min(cf_gmm2(:));
+    [costfunctions_min(trial, 1, 3), costfunctions_min(trial, 2, 3)] = find(cf_gmm2 == minValue);
     
     %%
     
-%     [X,Y] = meshgrid(r_z, t_z);
-% 
-%     figure2 = figure(2);
-%     figure2.WindowState  = 'maximized';
-%     subplot(1,3,1);
-%     surf(X,Y, cf_rmse);
-%     view([-10, 10]);
-%     title('RMSE');
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
-%     subplot(1,3,2);
-%     surf(X,Y, cf_gmm);
-%     view([-10, 10]);
-%     title(sprintf('GMM L2 Distance'));
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
-%     subplot(1,3,3);
-%     surf(X,Y, cf_gmm2);
-%     view([-10, 10]);
-%     title(sprintf('GMM Loglikelihood'));
-%     xlabel('Rz (deg)');
-%     ylabel('tz (mm)');
-%     zlabel('Cost');
+    %{
+    [X,Y] = meshgrid(r_z, t_z);
+    figure2 = figure(2);
+    figure2.WindowState  = 'maximized';
+    subplot(1,3,1);
+    surf(X,Y, cf_rmse);
+    view([-10, 10]);
+    title('RMSE');
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
+    subplot(1,3,2);
+    surf(X,Y, cf_gmm);
+    view([-10, 10]);
+    title(sprintf('GMM L2 Distance'));
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
+    subplot(1,3,3);
+    surf(X,Y, cf_gmm2);
+    view([-10, 10]);
+    title(sprintf('GMM Loglikelihood'));
+    xlabel('Rz (deg)');
+    ylabel('tz (mm)');
+    zlabel('Cost');
+    %}
 
 end
 

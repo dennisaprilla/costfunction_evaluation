@@ -5,15 +5,20 @@ path_boneUSsimple           = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\boneU
 path_gmmreg                 = 'D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB';
 
 path_bone     = strcat(path_pointcloudregistration, filesep, 'data', filesep, 'bone');
-path_amode    = strcat(path_bone, filesep, 'amode_accessible_sim3');
 path_bmode    = strcat(path_boneUSsimple, filesep, 'outputs', filesep, 'usmeasurement_b');
-path_function = strcat(path_boneUSsimple, filesep, 'functions');
+path_function1 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'experimental');
+path_function2 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'geometry');
 path_output   = 'results';
 
 addpath(path_bone);
-addpath(path_amode);
 addpath(path_bmode);
-addpath(genpath(path_function));
+addpath(path_gmmreg);
+addpath(path_function1);
+addpath(path_function2);
+
+% set both of these to false if you are not using debug mode
+displaybone = true;
+displaycf   = true;
 
 clear path_pointcloudregistration path_boneUSsimple path_gmmreg;
 
@@ -26,6 +31,20 @@ ptCloud_Npoints  = size(ptCloud.Points,1);
 ptCloud_centroid = mean(ptCloud.Points, 1);
 % prepare Ŭ, the noiseless, complete, moving dataset
 U_breve          = (ptCloud.Points - ptCloud_centroid)';
+
+% (for debugging only) show figure for sanity check
+if(displaybone)
+    figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
+    axes1 = axes('Parent', figure1);
+    plot3( axes1, ...
+           U_breve(1,:), ...
+           U_breve(2,:), ...
+           U_breve(3,:), ...
+           '.', 'Color', [0.7 0.7 0.7], ...
+           'MarkerSize', 0.1, ...
+           'Tag', 'plot_bone_full');
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+end
 
 %% Simulate Search Space
 
@@ -43,15 +62,17 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation Setup
 
 % setup the simulation configuration
-noises             = [1 2];
-pointcounts        = 15;
+noises             = [1 2 3];
+noise_skewconst    = 0.025;
+noise_Rconst       = 1.5;
+pointconfigs       = {'usdata_b_1a', 'usdata_b_1b', 'usdata_b_2a', 'usdata_b_2b'};
 num_trials         = 5;
-costfunction_name  = "rmse";
-costfunction_scale = 40;
+costfunction_name  = "gmm";
+costfunction_scale = 30;
 
 % save the configuration to a structure
 trialsdesc.noises              = noises;
-trialsdesc.pointcounts         = pointcounts;
+trialsdesc.pointconfigs        = pointconfigs;
 trialsdesc.num_trials          = num_trials;
 trialsdesc.costfunction_name   = costfunction_name;
 if (strcmp(costfunction_name, "gmm"))
@@ -61,100 +82,77 @@ else
 end
 
 % variable that will contains every global minimum of costfunction
-costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
+costfunctions_min  = ones(num_trials, 2, length(noises), length(pointconfigs));
 % naming the filename for result
 filename_simresult = sprintf('tibia_ab_%s_%d', costfunction_name, num_trials);
 
 %%
 
-% loop over all of the pointcount configuration
-for pointcount=1:length(pointcounts)
-
-    current_pointcount = pointcounts(pointcount);
+% loop over all of the pointconfig configuration
+for pointconfig=1:length(pointconfigs)
     
-    % get a-mode data
-    filename_amodedata = sprintf('amode_tibia_%d_a', current_pointcount);
-    filepath_amodedata = sprintf('%s%s%s.mat', path_amode, filesep, filename_amodedata);
-    load(filepath_amodedata);
-    Ua = vertcat(amode_all.Position);
+    % get the current pointconfig
+    current_pointconfig = pointconfigs{pointconfig};
     
     % get b-mode data
-    filename_bmodedata = sprintf('usdata_b_02-23-2022_11-33');
+    filename_bmodedata = sprintf(current_pointconfig);
     filepath_bmodedata = sprintf('%s%s%s.mat', path_bmode, filesep, filename_bmodedata);
     load(filepath_bmodedata);
     Ub_pointcloud = bmode_simulation.pointcloud;
     Ub_plane      = bmode_simulation.plane;
     
-    %{
-    figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
-    axes1 = axes('Parent', figure1);
-    plot3( axes1, ...
-           U_breve(1,:), ...
-           U_breve(2,:), ...
-           U_breve(3,:), ...
-           '.', 'Color', [0.7 0.7 0.7], ...
-           'MarkerSize', 0.1, ...
-           'Tag', 'plot_bone_full');
-    xlabel('X'); ylabel('Y'); zlabel('Z');
-    grid on; axis equal; hold on;
-    plot3( axes1, ...
-           Ua(1,:), ...
-           Ua(2,:), ...
-           Ua(3,:), ...
-           'or', 'MarkerFaceColor', 'r', ...
-           'Tag', 'plot_bone_full');
-    plot3( axes1, ...
-           Ub(1,:), ...
-           Ub(2,:), ...
-           Ub(3,:), ...
-           'or', 'MarkerFaceColor', 'r', ...
-           'Tag', 'plot_bone_full');
-    %}
+    % (for debugging only) show figure for sanity check
+    if(displaybone)
+        grid on; axis equal; hold on;
+        plot3( axes1, ...
+               Ub_pointcloud(:,1), ...
+               Ub_pointcloud(:,2), ...
+               Ub_pointcloud(:,3), ...
+               'or', 'MarkerFaceColor', 'r', ...
+               'Tag', 'plot_bone_full');
+    end
     
     % loop over all of the noise configuration
     for noise=1:length(noises)
-
+        
+        % get the current noise
         current_noise = noises(noise);
+        
+        % setup the noise
+        noise_bin_t    = current_noise;
+        noise_bin_s    = current_noise*noise_skewconst;
+        noise_bex_R    = current_noise*noise_Rconst;
+        noise_bex_t    = current_noise;
         
         % for each config, do trials until the number of num_trials
         for trial=1:num_trials
             
-            fprintf('pointcount:%d, noise:%d, trials: %d\n', current_pointcount, current_noise, trial);
-            
-            % add isotropic zero-mean gaussian noise to U, simulating noise measurement
-            random_noise  = -current_noise/ptCloud_scale + (current_noise/ptCloud_scale + current_noise/ptCloud_scale)*rand(size(Ua, 1),3);
-            Ua_noised = (Ua + random_noise);
+            fprintf('pointconfig: %s, noise: %d, trials: %d\n', current_pointconfig, current_noise, trial);
             
             % put internal and external noise to b-mode
-            t2d_noise = current_noise/ptCloud_scale;
-            s_noise   = current_noise/2 * 0.1;
-            [Ub_noised, ~] = bmode_addnoise_internal(Ub_plane, Ub_pointcloud, t2d_noise, s_noise);
-            R_noise   = current_noise;
-            t3d_noise = current_noise/ptCloud_scale;
-            [Ub_noised, ~] = bmode_addnoise_external(Ub_noised, R_noise, t3d_noise);            
+            Ub_noised = Ub_pointcloud;
+            % parameter for internal noise
+            t2d_noise = [noise_bin_t/ptCloud_scale 0.5*(noise_bin_t/ptCloud_scale)];
+            s_noise   = noise_bin_s;
+            [Ub_noised, ~] = bmode_addnoise_internal(Ub_plane, Ub_noised, t2d_noise, s_noise);
+            % parameter for external noise
+            R_noise   = noise_bex_R;
+            t3d_noise = noise_bex_t/ptCloud_scale;
+            [Ub_noised, ~] = bmode_addnoise_external(Ub_noised, R_noise, t3d_noise);         
 
             % gather all of the ultrasound measurement simulation
-            model_ptCloud = [Ua_noised; Ub_noised];
+            model_ptCloud = Ub_noised;
             
-            %
-            figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
-            axes1 = axes('Parent', figure1);
-            plot3( axes1, ...
-                   U_breve(1,:), ...
-                   U_breve(2,:), ...
-                   U_breve(3,:), ...
-                   '.', 'Color', [0.7 0.7 0.7], ...
-                   'MarkerSize', 0.1, ...
-                   'Tag', 'plot_bone_full');
-            xlabel('X'); ylabel('Y'); zlabel('Z');
-            grid on; axis equal; hold on;
-            plot3( axes1, ...
-                   model_ptCloud(:,1), ...
-                   model_ptCloud(:,2), ...
-                   model_ptCloud(:,3), ...
-                   'or', 'MarkerFaceColor', 'r', ...
-                   'Tag', 'plot_bone_full');
-            %
+            % (for debugging only) show figure for sanity check
+            if (displaybone)
+                grid on; axis equal; hold on;
+                plot3( axes1, ...
+                       model_ptCloud(:,1), ...
+                       model_ptCloud(:,2), ...
+                       model_ptCloud(:,3), ...
+                       'oy', ...
+                       'Tag', 'plot_bone_full');
+            end
             
             % prepare variable to contains all costfunction value
             cf  = zeros(length(r_z), length(t_z));
@@ -194,21 +192,47 @@ for pointcount=1:length(pointcounts)
             end        
             toc;
             
+            % (for debugging only) display cost function surface
+            if (displaycf)
+                [X,Y] = meshgrid(t_z, r_z);
+                figure2 = figure(2);
+                surf(X,Y, cf);
+                xlabel('tz (mm)');
+                ylabel('Rz (deg)');
+                zlabel('Cost Function Value');
+                view(0, 90);
+            end
+            
             % look for the min
             minValue = min(cf(:));
-            [costfunctions_min(trial, 1, noise, pointcount), ...
-             costfunctions_min(trial, 2, noise, pointcount)] = find(cf == minValue);
+            [costfunctions_min(trial, 1, noise, pointconfig), ...
+             costfunctions_min(trial, 2, noise, pointconfig)] = find(cf == minValue);
+         
+            % (for debugging only) break the nested loop
+            if (or(displaybone, displaycf))
+                break;
+            end
          
         % end trials    
         end
         
         % i put save here, just in case the pc is overheating
-        save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        % save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        
+        % (for debugging only) break the nested loop
+        if (or(displaybone, displaycf))
+            break;
+        end
     
     % end noises    
     end
     
-% end pointcounts    
+    % (for debugging only) break the nested loop
+    if (or(displaybone, displaycf))
+        break;
+    end
+    
+% end pointconfigs    
 end
     
     

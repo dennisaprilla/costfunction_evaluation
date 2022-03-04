@@ -3,6 +3,9 @@ clc; clear; close all;
 addpath(genpath('..\pointcloudregistration_evaluations'));
 addpath(genpath('..\gmmreg\MATLAB'));
 
+displaybone = true;
+displaycf   = true;
+
 %%
 
 % read the point cloud (bone) from STL/PLY file
@@ -14,18 +17,39 @@ ptCloud_centroid = mean(ptCloud.Points, 1);
 % prepare Ŭ, the noiseless, complete, moving dataset
 U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
+% (for debugging only) show figure for sanity check
+if(displaybone)
+    figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
+    axes1 = axes('Parent', figure1);
+    plot3( axes1, ...
+           U_breve(1,:), ...
+           U_breve(2,:), ...
+           U_breve(3,:), ...
+           '.', 'Color', [0.7 0.7 0.7], ...
+           'MarkerSize', 0.1, ...
+           'Tag', 'plot_bone_full');
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+end
+
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-selectedpoint_str = sprintf('data/bone/amode_accessible_sim1/amode_tibia_20.mat');
+selectedpoint_str = sprintf('data/bone/amode_accessible_sim2/amode_tibia_20.mat');
 load(selectedpoint_str);
-U = [ vertcat(amode_prereg1.Position); ...
-      vertcat(amode_prereg2.Position); ...
-      vertcat(amode_prereg3.Position); ...
-      vertcat(amode_mid.Position) ]';
+U = vertcat(amode_all.Position)';
 
+% (for debugging only) show figure for sanity check
+if(displaybone)
+    grid on; axis equal; hold on;
+    plot3( axes1, ...
+           U(1,:), ...
+           U(2,:), ...
+           U(3,:), ...
+           'or', 'MarkerFaceColor', 'r', ...
+           'Tag', 'plot_bone_full');
+end
     
 % obtain all combination of z rotation and translation
-range = 8;
+range = 10;
 step  = 0.25;
 r_z   = (-range:step:range);
 t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
@@ -35,6 +59,7 @@ Rs = eul2rotm(deg2rad(rs), 'ZYX');
 % change z translation to trgitanslation vector
 ts = [ zeros(2, length(t_z)); t_z];
 
+% trials configuration
 num_trials        = 100;
 noise             = 2;
 num_costfunction  = 3;
@@ -49,28 +74,16 @@ for trial=1:num_trials
     random_noise  = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
     model_ptCloud = (U + random_noise)';
     
-    %{
-    % plot Ŭ, the noiseless, complete, moving dataset
-    figure1 = figure(1);
-    figure1.WindowState  = 'maximized';
-    axes1 = axes('Parent', figure1);
-    plot3( axes1, ...
-           U_breve(1,:), ...
-           U_breve(2,:), ...
-           U_breve(3,:), ...
-           '.', 'Color', [0.7 0.7 0.7],...
-           'MarkerSize', 0.1, ...
-           'Tag', 'plot_Ubreve');
-    xlabel('X'); ylabel('Y');
-    grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
-    % plot U, the noisy, incomplete, moving dataset
-    plot3( axes1, ...
-           U(1,:), ...
-           U(2,:), ...
-           U(3,:), ...
-           'or', ...
-           'Tag', 'plot_U');
-    %}
+    % (for debugging only) show figure for sanity check
+    if (displaybone)
+        grid on; axis equal; hold on;
+        plot3( axes1, ...
+               model_ptCloud(:,1), ...
+               model_ptCloud(:,2), ...
+               model_ptCloud(:,3), ...
+               'oy', ...
+               'Tag', 'plot_bone_full');
+    end
        
     %%
     
@@ -131,33 +144,39 @@ for trial=1:num_trials
     
     %%
     
-    %{
-    [X,Y] = meshgrid(r_z, t_z);
-    figure2 = figure(2);
-    figure2.WindowState  = 'maximized';
-    subplot(1,3,1);
-    surf(X,Y, cf_rmse);
-    view([-10, 10]);
-    title('RMSE');
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
-    subplot(1,3,2);
-    surf(X,Y, cf_gmm);
-    view([-10, 10]);
-    title(sprintf('GMM L2 Distance'));
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
-    subplot(1,3,3);
-    surf(X,Y, cf_gmm2);
-    view([-10, 10]);
-    title(sprintf('GMM Loglikelihood'));
-    xlabel('Rz (deg)');
-    ylabel('tz (mm)');
-    zlabel('Cost');
-    %}
+    % (for debugging only) display cost function surface
+    if (displaycf)
+        [X,Y] = meshgrid(r_z, t_z);
+        figure2 = figure(2);
+        figure2.WindowState  = 'maximized';
+        subplot(1,3,1);
+        surf(X,Y, cf_rmse);
+        view([-10, 10]);
+        title('RMSE');
+        xlabel('Rz (deg)');
+        ylabel('tz (mm)');
+        zlabel('Cost');
+        subplot(1,3,2);
+        surf(X,Y, cf_gmm);
+        view([-10, 10]);
+        title(sprintf('GMM L2 Distance'));
+        xlabel('Rz (deg)');
+        ylabel('tz (mm)');
+        zlabel('Cost');
+        subplot(1,3,3);
+        surf(X,Y, cf_gmm2);
+        view([-10, 10]);
+        title(sprintf('GMM Loglikelihood'));
+        xlabel('Rz (deg)');
+        ylabel('tz (mm)');
+        zlabel('Cost');
+    end
+    
+    % (for debugging only) break the loop
+    if (or(displaybone, displaycf))
+        break;
+    end
 
 end
 
-save('results\rmsegmm_tibia30_2.mat', 'costfunctions_min', 'r_z', 't_z');
+% save('results\rmsegmm_tibia30_2.mat', 'costfunctions_min', 'r_z', 't_z');

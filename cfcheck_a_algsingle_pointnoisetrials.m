@@ -3,6 +3,9 @@ clc; clear; close all;
 addpath(genpath('..\pointcloudregistration_evaluations'));
 addpath(genpath('..\gmmreg\MATLAB'));
 
+displaybone = true;
+displaycf   = true;
+
 %% Prepare Bone Point Cloud
 
 % read the point cloud (bone) from STL/PLY file
@@ -12,6 +15,20 @@ ptCloud_Npoints  = size(ptCloud.Points,1);
 ptCloud_centroid = mean(ptCloud.Points, 1);
 % prepare Ŭ, the noiseless, complete, moving dataset
 U_breve          = (ptCloud.Points - ptCloud_centroid)';
+
+% (for debugging only) show figure for sanity check
+if(displaybone)
+    figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
+    axes1 = axes('Parent', figure1);
+    plot3( axes1, ...
+           U_breve(1,:), ...
+           U_breve(2,:), ...
+           U_breve(3,:), ...
+           '.', 'Color', [0.7 0.7 0.7], ...
+           'MarkerSize', 0.1, ...
+           'Tag', 'plot_bone_full');
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+end
 
 %% Simulate Search Space
 
@@ -30,14 +47,14 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 % setup the simulation configuration
 noises             = [1 2 3];
-pointcounts        = [30];
+pointconfigs       = [15 20 25 30];
 num_trials         = 500;
 costfunction_name  = "gmm";
 costfunction_scale = 40;
 
 % save the configuration to a structure
 trialsdesc.noises              = noises;
-trialsdesc.pointcounts         = pointcounts;
+trialsdesc.pointconfigs        = pointconfigs;
 trialsdesc.num_trials          = num_trials;
 trialsdesc.costfunction_name   = costfunction_name;
 if (strcmp(costfunction_name, "gmm"))
@@ -47,32 +64,32 @@ else
 end
 
 % variable that will contains every global minimum of costfunction
-costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
+costfunctions_min  = ones(num_trials, 2, length(noises), length(pointconfigs));
 % naming the filename for result
 filename_simresult = sprintf('tibia30c_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 
 % loop over all of the pointcount configuration
-for pointcount=1:length(pointcounts)
+for pointconfig=1:length(pointconfigs)
 
-    current_pointcount = pointcounts(pointcount);
+    current_pointconfig = pointconfigs(pointconfig);
     
     % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
     % These a-mode simulated measurement is manually selected from the bone model.
-    %{
-    filename_amodedata = sprintf('amode_tibia_%d', current_pointcount);
-    filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
+    filename_amodedata = sprintf('amode_tibia_%d', current_pointconfig);
+    filepath_amodedata = sprintf('data/bone/amode_accessible_sim2/%s.mat', filename_amodedata);
     load(filepath_amodedata);
-    U = [ vertcat(amode_prereg1.Position); ...
-          vertcat(amode_prereg2.Position); ...
-          vertcat(amode_prereg3.Position); ...
-          vertcat(amode_mid.Position)]';
-    %}
-    %
-    filename_amodedata = sprintf('amode_tibia_%d_c', current_pointcount);
-    filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
-    load(filepath_amodedata);
-    U = vertcat(amode_all.Position)';  
-    %
+    U = vertcat(amode_all.Position)';
+    
+    % (for debugging only) show figure for sanity check
+    if(displaybone)
+        grid on; axis equal; hold on;
+        plot3( axes1, ...
+               U(1,:), ...
+               U(2,:), ...
+               U(3,:), ...
+               'or', 'MarkerFaceColor', 'r', ...
+               'Tag', 'plot_bone_full');
+    end
       
     % loop over all of the noise configuration
     for noise=1:length(noises)
@@ -82,11 +99,22 @@ for pointcount=1:length(pointcounts)
         % for each config, do trials until the number of num_trials
         for trial=1:num_trials
                 
-            fprintf('pointcount:%d, noise:%d, trials: %d\n', current_pointcount, current_noise, trial);
+            fprintf('pointcount:%d, noise:%d, trials: %d\n', current_pointconfig, current_noise, trial);
 
             % add isotropic zero-mean gaussian noise to U, simulating noise measurement
             random_noise  = -current_noise/ptCloud_scale + (current_noise/ptCloud_scale + current_noise/ptCloud_scale)*rand(3,size(U, 2));
             model_ptCloud = (U + random_noise)';
+            
+            % (for debugging only) show figure for sanity check
+            if (displaybone)
+                grid on; axis equal; hold on;
+                plot3( axes1, ...
+                       model_ptCloud(:,1), ...
+                       model_ptCloud(:,2), ...
+                       model_ptCloud(:,3), ...
+                       'oy', ...
+                       'Tag', 'plot_bone_full');
+            end
             
             % prepare variable to contains all costfunction value
             cf  = zeros(length(r_z), length(t_z));
@@ -125,19 +153,45 @@ for pointcount=1:length(pointcounts)
                 cf(current_z, : )  = cf_temp;
             end        
             toc;
+            
+            % (for debugging only) display cost function surface
+            if (displaycf)
+                [X,Y] = meshgrid(t_z, r_z);
+                figure2 = figure(2);
+                surf(X,Y, cf);
+                xlabel('tz (mm)');
+                ylabel('Rz (deg)');
+                zlabel('GMM L2 distance');
+                view(0, 90);
+            end
 
             % look for the min
             minValue = min(cf(:));
-            [costfunctions_min(trial, 1, noise, pointcount), ...
-             costfunctions_min(trial, 2, noise, pointcount)] = find(cf == minValue);
+            [costfunctions_min(trial, 1, noise, pointconfig), ...
+             costfunctions_min(trial, 2, noise, pointconfig)] = find(cf == minValue);
+         
+            % (for debugging only) break the nested loop
+            if (or(displaybone, displaycf))
+                break;
+            end
         
         % end trials
         end
         
         % i put save here, just in case the pc is overheating
-        save(sprintf('results\\%s.mat', filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        % save(sprintf('results\\%s.mat', filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        
+        % (for debugging only) break the nested loop
+        if (or(displaybone, displaycf))
+            break;
+        end
 
     % end noises
+    end
+    
+    % (for debugging only) break the nested loop
+    if (or(displaybone, displaycf))
+        break;
     end
 
 % end pointcounts

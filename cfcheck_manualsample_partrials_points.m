@@ -30,10 +30,10 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 % setup the simulation configuration
 noises             = [1 2 3];
-pointcounts        = [30];
+pointcounts        = [10 15 20 25 30];
 num_trials         = 500;
-costfunction_name  = "gmm";
-costfunction_scale = 40;
+costfunction_name  = "rmse";
+costfunction_scale = 20;
 
 % save the configuration to a structure
 trialsdesc.noises              = noises;
@@ -42,14 +42,16 @@ trialsdesc.num_trials          = num_trials;
 trialsdesc.costfunction_name   = costfunction_name;
 if (strcmp(costfunction_name, "gmm"))
     trialsdesc.costfunction_scale  = costfunction_scale;
+    % naming the filename for result
+    filename_simresult = sprintf('tibia_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 else
     trialsdesc.costfunction_scale  = NaN;
+    % naming the filename for result
+    filename_simresult = sprintf('tibia_%s_%d', costfunction_name, num_trials);
 end
 
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointcounts));
-% naming the filename for result
-filename_simresult = sprintf('tibia30c_%s_scale%d_%d', costfunction_name, costfunction_scale, num_trials);
 
 % loop over all of the pointcount configuration
 for pointcount=1:length(pointcounts)
@@ -68,10 +70,10 @@ for pointcount=1:length(pointcounts)
           vertcat(amode_mid.Position)]';
     %}
     %
-    filename_amodedata = sprintf('amode_tibia_%d_c', current_pointcount);
-    filepath_amodedata = sprintf('data/bone/%s.mat', filename_amodedata);
+    filename_amodedata = sprintf('amode_tibia_%d', current_pointcount);
+    filepath_amodedata = sprintf('data/bone/amode_accessible_sim2/%s.mat', filename_amodedata);
     load(filepath_amodedata);
-    U = vertcat(amode_all.Position)';  
+    U = vertcat(amode_all.Position)';
     %
       
     % loop over all of the noise configuration
@@ -135,7 +137,7 @@ for pointcount=1:length(pointcounts)
         end
         
         % i put save here, just in case the pc is overheating
-        save(sprintf('results\\%s.mat', filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        save(sprintf('results\\accessible_sim2\\%s.mat', filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
 
     % end noises
     end

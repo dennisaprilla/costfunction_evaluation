@@ -17,8 +17,8 @@ addpath(path_function1);
 addpath(path_function2);
 
 % set both of these to false if you are not using debug mode
-displaybone = true;
-displaycf   = true;
+displaybone = false;
+displaycf   = false;
 
 clear path_pointcloudregistration path_boneUSsimple path_gmmreg;
 
@@ -66,8 +66,8 @@ noises             = [1 2 3];
 noise_skewconst    = 0.025;
 noise_Rconst       = 1.5;
 pointconfigs       = {'usdata_b_1a', 'usdata_b_1b', 'usdata_b_2a', 'usdata_b_2b'};
-num_trials         = 5;
-costfunction_name  = "gmm";
+num_trials         = 500;
+costfunction_name  = "rmse";
 costfunction_scale = 30;
 
 % save the configuration to a structure
@@ -84,7 +84,7 @@ end
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2, length(noises), length(pointconfigs));
 % naming the filename for result
-filename_simresult = sprintf('tibia_ab_%s_%d', costfunction_name, num_trials);
+filename_simresult = sprintf('tibiaBmode_%s%d_%d', trialsdesc.costfunction_name, trialsdesc.costfunction_scale, trialsdesc.num_trials);
 
 %%
 
@@ -217,7 +217,7 @@ for pointconfig=1:length(pointconfigs)
         end
         
         % i put save here, just in case the pc is overheating
-        % save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
+        save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
         
         % (for debugging only) break the nested loop
         if (or(displaybone, displaycf))

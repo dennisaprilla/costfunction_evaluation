@@ -2,18 +2,21 @@ clc; clear; close all;
 
 path_pointcloudregistration = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\pointcloudregistration_evaluations';
 path_boneUSsimple           = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\boneUSsimple';
-path_gmmreg                 = 'D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB';
+path_gmmreg                 = 'D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB\GaussTransform';
 
 path_bone     = strcat(path_pointcloudregistration, filesep, 'data', filesep, 'bone');
 path_amode    = strcat(path_bone, filesep, 'amode_accessible_sim3');
 path_bmode    = strcat(path_boneUSsimple, filesep, 'outputs', filesep, 'usmeasurement_b');
-path_function = strcat(path_boneUSsimple, filesep, 'functions');
+path_function1 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'experimental');
+path_function2 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'geometry');
 path_output   = 'results';
 
 addpath(path_bone);
 addpath(path_amode);
 addpath(path_bmode);
-addpath(genpath(path_function));
+addpath(path_gmmreg);
+addpath(path_function1);
+addpath(path_function2);
 
 clear path_pointcloudregistration path_boneUSsimple path_gmmreg;
 
@@ -43,9 +46,19 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation Setup
 
 % setup the simulation configuration
-noise              = 0;
+% noise_a       = 1;
+% noise_bin_t   = 2;
+% noise_bin_s   = 0;
+% noise_bex_R   = noise_a*2.25;
+% noise_bex_t   = noise_a;
+noise_a       = 1;
+noise_bin_t   = 1;
+noise_bin_s   = 0;
+noise_bex_R   = noise_a*2.25;
+noise_bex_t   = noise_a;
+
 num_trials         = 1;
-costfunction_name  = "rmse";
+costfunction_name  = "gmm";
 costfunction_scale = 30;
 
 % variable that will contains every global minimum of costfunction
@@ -62,16 +75,14 @@ load(filepath_amodedata);
 Ua = vertcat(amode_all.Position);
 
 % get b-mode data
-% filename_bmodedata = sprintf('usdata_b_02-23-2022_11-33');
-filename_bmodedata = sprintf('usdata_b_02-23-2022_16-38');
-% filename_bmodedata = sprintf('usdata_b_02-23-2022_16-52');
+filename_bmodedata = sprintf('usdata_b_1a');
 filepath_bmodedata = sprintf('%s%s%s.mat', path_bmode, filesep, filename_bmodedata);
 load(filepath_bmodedata);
 Ub_pointcloud = bmode_simulation.pointcloud;
 Ub_plane      = bmode_simulation.plane;
 
 % show figure for sanity check
-%{
+%
 figure1 = figure('Name', 'Bone', 'Position', [0 -100 400 900]);
 axes1 = axes('Parent', figure1);
 plot3( axes1, ...
@@ -95,7 +106,7 @@ plot3( axes1, ...
        Ub_pointcloud(:,3), ...
        'or', 'MarkerFaceColor', 'r', ...
        'Tag', 'plot_bone_full');
-%}
+%
 
         
 % for each config, do trials until the number of num_trials
@@ -104,17 +115,18 @@ for trial=1:num_trials
     fprintf('trials: %d\n', trial);
 
     % add isotropic zero-mean gaussian noise to U, simulating noise measurement
-    random_noise  = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(size(Ua, 1),3);
+    random_noise  = -noise_a/ptCloud_scale + (noise_a/ptCloud_scale + noise_a/ptCloud_scale)*rand(size(Ua, 1),3);
     Ua_noised = (Ua + random_noise);
 
     % put internal and external noise to b-mode
     Ub_noised = Ub_pointcloud;
-    %
-    t2d_noise = noise/ptCloud_scale;
-    s_noise   = noise/2 * 0.1;
+    % parameter for internal noise
+    t2d_noise = [noise_bin_t/ptCloud_scale 0.5*(noise_bin_t/ptCloud_scale)];
+    s_noise   = noise_bin_s;
     [Ub_noised, ~] = bmode_addnoise_internal(Ub_plane, Ub_noised, t2d_noise, s_noise);
-    R_noise   = noise;
-    t3d_noise = noise/ptCloud_scale;
+    % parameter for external noise
+    R_noise   = noise_bex_R;
+    t3d_noise = noise_bex_t/ptCloud_scale;
     [Ub_noised, ~] = bmode_addnoise_external(Ub_noised, R_noise, t3d_noise);
     %
 
@@ -124,7 +136,7 @@ for trial=1:num_trials
     model_ptCloud = Ub_noised;
 
     % show figure for sanity check
-    %{
+    %
     grid on; axis equal; hold on;
     plot3( axes1, ...
            model_ptCloud(:,1), ...
@@ -132,7 +144,7 @@ for trial=1:num_trials
            model_ptCloud(:,3), ...
            'oy', ...
            'Tag', 'plot_bone_full');
-    %}
+    %
 
     % prepare variable to contains all costfunction value
     cf  = zeros(length(r_z), length(t_z));

@@ -16,10 +16,7 @@ U_breve          = (ptCloud.Points - ptCloud_centroid)';
 
 % Read the simulated a-mode measurement point cloud, which is a subset of Ŭ.
 % These a-mode simulated measurement is manually selected from the bone model.
-% selectedpoint_str = sprintf('data/bone/amode_measure3.mat');
-% load(selectedpoint_str);
-% U = [vertcat(amode_prereg.Position); vertcat(amode_mid.Position)]';
-selectedpoint_str = sprintf('data/bone/amode_tibia_20.mat');
+selectedpoint_str = sprintf('data/bone/amode_accessible_sim1/amode_tibia_20.mat');
 load(selectedpoint_str);
 U = [ vertcat(amode_prereg1.Position); ...
       vertcat(amode_prereg2.Position); ...
@@ -39,6 +36,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 noise        = 2;
 num_trials   = 1;
+costfunction_name = "gmm";
 costfunctions_min = zeros(num_trials, 2); 
 
 for trial=1:num_trials
@@ -49,27 +47,29 @@ for trial=1:num_trials
     % random_noise = normrnd(0, noise/ptCloud_scale, [3, size(U, 2)]);
     random_noise = -noise/ptCloud_scale + (noise/ptCloud_scale + noise/ptCloud_scale)*rand(3,size(U, 2));
     model_ptCloud = (U + random_noise)';
-
-%     % plot Ŭ, the noiseless, complete, moving dataset
-%     figure1 = figure(1);
-%     figure1.WindowState  = 'maximized';
-%     axes1 = axes('Parent', figure1);
-%     plot3( axes1, ...
-%            U_breve(1,:), ...
-%            U_breve(2,:), ...
-%            U_breve(3,:), ...
-%            '.', 'Color', [0.7 0.7 0.7],...
-%            'MarkerSize', 0.1, ...
-%            'Tag', 'plot_Ubreve');
-%     xlabel('X'); ylabel('Y');
-%     grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
-%     % plot U, the noisy, incomplete, moving dataset
-%     plot3( axes1, ...
-%            U(1,:), ...
-%            U(2,:), ...
-%            U(3,:), ...
-%            'or', ...
-%            'Tag', 'plot_U');
+    
+    %{
+    % plot Ŭ, the noiseless, complete, moving dataset
+    figure1 = figure(1);
+    figure1.WindowState  = 'maximized';
+    axes1 = axes('Parent', figure1);
+    plot3( axes1, ...
+           U_breve(1,:), ...
+           U_breve(2,:), ...
+           U_breve(3,:), ...
+           '.', 'Color', [0.7 0.7 0.7],...
+           'MarkerSize', 0.1, ...
+           'Tag', 'plot_Ubreve');
+    xlabel('X'); ylabel('Y');
+    grid(axes1, 'on'); axis(axes1, 'equal'); hold(axes1, 'on');
+    % plot U, the noisy, incomplete, moving dataset
+    plot3( axes1, ...
+           U(1,:), ...
+           U(2,:), ...
+           U(3,:), ...
+           'or', ...
+           'Tag', 'plot_U');
+    %}
 
     %%
 
@@ -89,29 +89,27 @@ for trial=1:num_trials
             % transform Ŭ with respected transformation
             U_breve_prime = Rs(:,:,current_z) * U_breve + ts(:,current_t);
             scene_ptCloud = U_breve_prime';
+            
+            if(strcmp(costfunction_name, "gmm1"))
+                % GMM L2 Distance
+                scale = 20e-4;
+                [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
+                cf_t(current_t) = -f;
+                
+            elseif (strcmp(costfunction_name, "gmm2"))
+                X = scene_ptCloud;
+                Y = model_ptCloud;
+                % sigma = 9e-8; w = 1e-90;
+                % sigma = 5e-7; w = 0.9;
+                sigma = 5e-8; w = 5e-1;
+                [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
+                cf_t(current_t) = negativeLogLikelihood;
 
-%             % RMSE
-%             [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
-%             cf_t(current_t) = mean(nearest_dist);
-
-%             % GMM L2 Distance
-%             scale = 40e-4;
-            scale = 20e-4;
-            [f,~] =  GaussTransform(double(model_ptCloud), double(scene_ptCloud), scale);
-            cf_t(current_t) = -f;
-
-%             % GMM CPD Distance (?)
-%             X = scene_ptCloud;
-%             Y = model_ptCloud;
-% %             sigma = 9e-8;
-% %             w     = 1e-90;
-%             sigma = 5e-7;
-%             w     = 0.9;
-% %             sigma = 5e-8;
-% %             w     = 5e-1;
-%             [ ~, ~, ~, negativeLogLikelihood ] = computeEStep(X, Y, sigma, w);
-%             cf_t(current_t) = negativeLogLikelihood;
-
+            elseif (strcmp(costfunction_name, "rmse"))
+                % RMSE
+                [nearest_idx, nearest_dist] = knnsearch(scene_ptCloud, model_ptCloud);
+                cf_t(current_t) = mean(nearest_dist);
+            end
 
         end
 

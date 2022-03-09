@@ -1,8 +1,8 @@
 clc; clear; close all;
 
-path_pointcloudregistration = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\pointcloudregistration_evaluations';
-path_boneUSsimple           = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\boneUSsimple';
-path_gmmreg                 = 'D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB';
+path_pointcloudregistration = '..\pointcloudregistration_evaluations';
+path_boneUSsimple           = '..\boneUSsimple';
+path_gmmreg                 = '..\gmmreg\MATLAB\GaussTransform';
 
 path_bone     = strcat(path_pointcloudregistration, filesep, 'data', filesep, 'bone');
 path_bmode    = strcat(path_boneUSsimple, filesep, 'outputs', filesep, 'usmeasurement_b');
@@ -67,8 +67,8 @@ noise_skewconst    = 0.025;
 noise_Rconst       = 1.5;
 pointconfigs       = {'usdata_b_1a', 'usdata_b_1b', 'usdata_b_2a', 'usdata_b_2b'};
 num_trials         = 500;
-costfunction_name  = "rmse";
-costfunction_scale = 30;
+costfunction_name  = "gmm";
+costfunction_scale = 40;
 
 % save the configuration to a structure
 trialsdesc.noises              = noises;

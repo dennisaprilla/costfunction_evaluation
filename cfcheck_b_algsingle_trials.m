@@ -42,6 +42,7 @@ if(displaybone)
            '.', 'Color', [0.7 0.7 0.7], ...
            'MarkerSize', 0.1, ...
            'Tag', 'plot_bone_full');
+    grid on; axis equal; hold on;
     xlabel('X'); ylabel('Y'); zlabel('Z');
 end
 
@@ -55,7 +56,6 @@ Ub_plane      = bmode_simulation.plane;
 
 % show figure for sanity check
 if(displaybone)
-    grid on; axis equal; hold on;
     plot3( axes1, ...
            Ub_pointcloud(:,1), ...
            Ub_pointcloud(:,2), ...
@@ -81,8 +81,8 @@ ts = [ zeros(2, length(t_z)); t_z];
 
 % setup the noise constants
 noise_level     = 1;
-noise_skewconst = 0.05;
-noise_Rconst    = 2.25;
+noise_skewconst = 0.025;
+noise_Rconst    = 1.50;
 % setup the noise
 noise_bin_t    = noise_level;
 noise_bin_s    = noise_level*noise_skewconst;
@@ -92,7 +92,26 @@ noise_bex_t    = noise_level;
 % setup the simulation trials config
 num_trials         = 1;
 costfunction_name  = "gmm";
-costfunction_scale = 20;
+costfunction_scale = 10;
+use_boneportion    = true;
+
+% if use_boneportion is specified, we will use only the portion of the bone
+% instead of the whole bone. Portion is obtained from simulation toolbox 
+% (refer to file usmeasurement_b.m)
+if(use_boneportion)
+    % get the bone portion
+    U_breve = get_boneportion(bmode_simulation.portion, U_breve')';
+    % display it
+    if(displaybone)
+        plot3( axes1, ...
+               U_breve(1,:), ...
+               U_breve(2,:), ...
+               U_breve(3,:), ...
+               '.', 'Color', [0.9290 0.6940 0.1250], ...
+               'MarkerSize', 0.1, ...
+               'Tag', 'plot_bone_full');
+    end
+end
 
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2);
@@ -164,7 +183,7 @@ for trial=1:num_trials
 
         % store the temp to actual variable contains all costfunction value
         cf(current_z, : )  = cf_temp;
-    end        
+    end
     toc;
     
     % display cost function surface
@@ -175,7 +194,7 @@ for trial=1:num_trials
         xlabel('tz (mm)');
         ylabel('Rz (deg)');
         zlabel('GMM L2 distance');
-        view(0, 90);
+        view(-90, 90);
     end
 
     % look for the min

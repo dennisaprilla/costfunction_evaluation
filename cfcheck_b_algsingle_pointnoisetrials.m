@@ -17,8 +17,8 @@ addpath(path_function1);
 addpath(path_function2);
 
 % set both of these to false if you are not using debug mode
-displaybone = false;
-displaycf   = false;
+displaybone = true;
+displaycf   = true;
 
 clear path_pointcloudregistration path_boneUSsimple path_gmmreg;
 
@@ -65,7 +65,8 @@ ts = [ zeros(2, length(t_z)); t_z];
 noises             = [1 2 3];
 noise_skewconst    = 0.025;
 noise_Rconst       = 1.5;
-pointconfigs       = {'usdata_b_1a', 'usdata_b_1b', 'usdata_b_2a', 'usdata_b_2b'};
+% pointconfigs       = {'usdata_b_1a', 'usdata_b_1b', 'usdata_b_2a', 'usdata_b_2b'};
+pointconfigs       = {'usdata_b_1a'};
 num_trials         = 500;
 costfunction_name  = "gmm";
 costfunction_scale = 40;
@@ -216,13 +217,13 @@ for pointconfig=1:length(pointconfigs)
         % end trials    
         end
         
-        % i put save here, just in case the pc is overheating
-        save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
-        
         % (for debugging only) break the nested loop
         if (or(displaybone, displaycf))
             break;
         end
+        
+        % i put save here, just in case the pc is overheating
+        save(sprintf('%s%s%s.mat', path_output, filesep, filename_simresult), 'costfunctions_min', 'r_z', 't_z', 'trialsdesc');
     
     % end noises    
     end

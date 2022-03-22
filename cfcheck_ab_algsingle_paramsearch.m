@@ -1,8 +1,8 @@
 clc; clear; close all;
 
-path_pointcloudregistration = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\pointcloudregistration_evaluations';
-path_boneUSsimple           = 'D:\Documents\BELANDA\PhD Thesis\Code\MATLAB\boneUSsimple';
-path_gmmreg                 = 'D:\Documents\BELANDA\PhD Thesis\Code\cpp\gmmreg\MATLAB\GaussTransform';
+path_pointcloudregistration = '..\pointcloudregistration_evaluations';
+path_boneUSsimple           = '..\boneUSsimple';
+path_gmmreg                 = '..\gmmreg\MATLAB\GaussTransform';
 
 path_bone      = strcat(path_pointcloudregistration, filesep, 'data', filesep, 'bone');
 path_amode     = strcat(path_bone, filesep, filesep, 'amode_accessible_sim2');
@@ -112,12 +112,12 @@ noise_bex_t    = noise_level*noise_tconst;
 % setup the simulation trials config
 costfunction_name       = "gmm";
 costfunction_scaleconst = 1e-4;
-costfunction_scales_a   = [20 30 40 50];
-costfunction_scales_b   = [10 20 30 40];
+costfunction_scales_a   = [10 20 30 40 50];
+costfunction_scales_b   = [10 20 30 40 50];
 costfunction_alphaconst = size(Ua_pointcloud, 1)/size(Ub_pointcloud, 1);
-costfunction_alphas     = [0.5 1.0 1.5];
+costfunction_alphas     = [0.5 1.0 1.5 2.0];
 use_boneportion         = true;
-num_trials              = 100;
+num_trials              = 250;
 
 % if use_boneportion is specified, we will use only the portion of the bone
 % instead of the whole bone. Portion is obtained from simulation toolbox 
@@ -139,8 +139,6 @@ if(use_boneportion)
     end
 end
 
-% variable that will contains every global minimum of costfunction
-costfunctions_min  = ones(num_trials, 2);
 % naming the filename for result
 filepath = 'results\abmode_sim1';
 
@@ -160,6 +158,11 @@ scale_b = current_scale_b * costfunction_scaleconst;
 for costfunction_alpha = 1:length(costfunction_alphas) 
 current_alpha = costfunction_alphas(costfunction_alpha);
 alpha         = current_alpha * costfunction_alphaconst;
+
+% variable that will contains every global minimum of costfunction
+costfunctions_min  = ones(num_trials, 2);
+
+fprintf('scale_a: %d, scale_b: %d, alpha: %.2f -----------------\n', current_scale_a, current_scale_b, current_alpha);
 
 % for each config, do trials until the number of num_trials
 for trial=1:num_trials

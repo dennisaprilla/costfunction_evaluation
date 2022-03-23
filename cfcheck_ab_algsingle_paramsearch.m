@@ -98,7 +98,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation Setup
 
 % setup the noise constants
-noise_level     = 1;
+noise_level     = 2;
 noise_tconst    = 1;
 noise_skewconst = 0.025;
 noise_Rconst    = 1.25;
@@ -117,7 +117,7 @@ costfunction_scales_b   = [10 20 30 40 50];
 costfunction_alphaconst = size(Ua_pointcloud, 1)/size(Ub_pointcloud, 1);
 costfunction_alphas     = [0.5 1.0 1.5 2.0];
 use_boneportion         = true;
-num_trials              = 250;
+num_trials              = 100;
 
 % if use_boneportion is specified, we will use only the portion of the bone
 % instead of the whole bone. Portion is obtained from simulation toolbox 
@@ -140,7 +140,7 @@ if(use_boneportion)
 end
 
 % naming the filename for result
-filepath = 'results\abmode_sim1';
+filepath = 'results\abmode_sim3';
 
 %% Simulation Start
 

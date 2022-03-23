@@ -85,8 +85,8 @@ end
 %% Simulate Search Space
 
 % obtain all combination of z rotation and translation
-range = 15;
-step  = 0.5;
+range = 10;
+step  = 0.25;
 r_z   = (-range:step:range);
 t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
 % change z rotation to rotation matrix
@@ -161,8 +161,9 @@ alpha         = current_alpha * costfunction_alphaconst;
 
 % variable that will contains every global minimum of costfunction
 costfunctions_min  = ones(num_trials, 2);
-
+% display the current loop
 fprintf('scale_a: %d, scale_b: %d, alpha: %.2f -----------------\n', current_scale_a, current_scale_b, current_alpha);
+
 
 % for each config, do trials until the number of num_trials
 for trial=1:num_trials
@@ -205,7 +206,7 @@ for trial=1:num_trials
     % prepare variable to contains all costfunction value
     cf  = zeros(length(r_z), length(t_z));
 
-    % prepare a variable which needed for par for
+    % prepare a variable which needed for parfor
     loop_z = length(r_z);
     loop_t = length(t_z);
 
@@ -221,27 +222,56 @@ for trial=1:num_trials
             scene_ptCloud_a = ( Rs(:,:,current_z) * U_breve + ts(:,current_t) )';
             scene_ptCloud_b = ( Rs(:,:,current_z) * U_breve_part + ts(:,current_t) )';
 
+            % GMM L2 Distance
             if(strcmp(costfunction_name, "gmm"))
-                % GMM L2 Distance
+                % amode
                 [f_a,~] =  GaussTransform(double(Ua_noised), double(scene_ptCloud_a), scale_a);
+                % bmode
                 [f_b,~] =  GaussTransform(double(Ub_noised), double(scene_ptCloud_b), scale_b);
+                % fusion
                 cf_temp(current_t) = -(f_a + (alpha * f_b));
 
+            % RMSE
             elseif (strcmp(costfunction_name, "rmse"))
-                % RMSE
+                % amode
+                [~, nearest_dist] = knnsearch(scene_ptCloud_a, Ua_noised);
+                f_a = mean(nearest_dist);
+                % bmode
+                [~, nearest_dist] = knnsearch(scene_ptCloud_b, Ub_noised);
+                f_b = mean(nearest_dist);
+                % fusion
+                cf_temp(current_t) = f_a + (alpha * f_b);
                 
+            % GMM and RMSE
             elseif (strcmp(costfunction_name, "gmmrmse"))
-                % GMM and RMSE
+                % amode
+                [f_a,~] =  GaussTransform(double(Ua_noised), double(scene_ptCloud_a), scale_a);
+                % bmode
+                [~, nearest_dist] = knnsearch(scene_ptCloud_b, Ub_noised);
+                f_b = mean(nearest_dist);
+                % fusion
+                cf_temp(current_t) = -f_a + (alpha * f_b);
                 
+            % RMSE and GMM
             elseif (strcmp(costfunction_name, "rmsegmm"))
-                % RMSE and GMM
+                % amode
+                [~, nearest_dist] = knnsearch(scene_ptCloud_a, Ua_noised);
+                f_a = mean(nearest_dist);
+                % bmode
+                [f_b,~] =  GaussTransform(double(Ub_noised), double(scene_ptCloud_b), scale_b);
+                % bmode
+                cf_temp(current_t) = f_a + (alpha * -f_b);
                 
+            % end costfunction ifs
             end
-
+            
+        % end loop tz
         end
 
         % store the temp to actual variable contains all costfunction value
         cf(current_z, : )  = cf_temp;
+        
+	% end loop rz
     end
     toc;
     
@@ -264,22 +294,23 @@ for trial=1:num_trials
 end
 
 % save the details of the simulation
-simulation_config.scaleconst      = costfunction_scaleconst;
-simulation_config.scale_a         = current_scale_a;
-simulation_config.scale_b         = current_scale_b;
-simulation_config.alphaconst      = costfunction_alphaconst;
-simulation_config.alpha           = current_alpha;
-simulation_config.trials          = trial;
-simulation_config.use_boneportion = use_boneportion;
-simulation_config.noise.level     = noise_level;
-simulation_config.noise.tconst    = noise_tconst;
-simulation_config.noise.skewconst = noise_skewconst;
-simulation_config.noise.Rconst    = noise_Rconst;
+simulation_config.costfunction_name = costfunction_name;
+simulation_config.scaleconst        = costfunction_scaleconst;
+simulation_config.scale_a           = current_scale_a;
+simulation_config.scale_b           = current_scale_b;
+simulation_config.alphaconst        = costfunction_alphaconst;
+simulation_config.alpha             = current_alpha;
+simulation_config.trials            = trial;
+simulation_config.use_boneportion   = use_boneportion;
+simulation_config.noise.level       = noise_level;
+simulation_config.noise.tconst      = noise_tconst;
+simulation_config.noise.skewconst   = noise_skewconst;
+simulation_config.noise.Rconst      = noise_Rconst;
 
 % save the necessary files
 filename = sprintf('abmodeparamsearch_%d_%d_%d.mat', current_scale_a, current_scale_b, current_alpha*10);
 fullpath = strcat(filepath, filesep, filename);
-save(fullpath, 'costfunctions_min', 'simulation_config');
+save(fullpath, 'costfunctions_min', 'simulation_config', 'r_z', 't_z');
 
 % end alpha
 end

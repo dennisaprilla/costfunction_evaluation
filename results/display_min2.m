@@ -1,6 +1,8 @@
 % NOTE: 
 % filenaming must be: <bone>_<costfunction>_<param>.mat
 % if it is a testset: <bone>_<costfunction>_<param>_testset.mat
+% This script is for A-mode simulation. Shifting constant correction is
+% implemented in this script
 clear; close all;
 addpath('..\functions\display\subaxis');
 

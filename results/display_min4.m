@@ -10,10 +10,10 @@ t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
 
 clear ptCloud_scale range step;
 
-%%
+%% Loading the File
 
 % load the data
-filepath       = 'abmode_sim1';
+filepath   = 'abmode_sim3';
 fileinfos  = dir(fullfile(filepath, '*.mat'));
 filenames  = {fileinfos.name}';
 
@@ -24,11 +24,6 @@ for filenumber = 1:length(filenames)
     % get the current mat file
     current_filename = filenames{filenumber};
     load(strcat(filepath, filesep, current_filename));
-    
-    % calculate the magnitude (maybe it will be used, or not)
-    % middle = ceil(length(r_z)/2);
-    % costfunctions_min_normalized = costfunctions_min - middle;
-    % costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
     
     % costfunctions_min contains index of the search-space matrix, let's
     % convert it to real rz and tz value
@@ -48,44 +43,70 @@ clear costfunctions_min simulation_config fileinfos filenumber current_filename 
       costfunctions_min_normalized costfunctions_min_magnitude tz_scale ...
       rz_tz_est rz_tz_mean rz_tz_meanabs rz_tz_cov;
 
-%% Best Mean
+%% Summarizing the results
 
+% Best Mean
 dist_to_origin = vecnorm(statistical_results(:,1:2), 2, 2);
-[min_mean_val, min_mean_idx] = min(dist_to_origin);
+[min_val, min_idx] = min(dist_to_origin);
+statistical_results_preference(1).name     = 'mean_rztz';
+statistical_results_preference(1).fullname = 'Mean Rz-tz';
+statistical_results_preference(1).idx      = min_idx;
+statistical_results_preference(1).val      = min_val;
 
-%% Best Mean Absolute
+% Best Mean Absolute
+[min_val, min_idx] = min(statistical_results(:,3));
+statistical_results_preference(2).name     = 'absmean_rz';
+statistical_results_preference(2).fullname = 'Absolute Mean Rz';
+statistical_results_preference(2).idx      = min_idx;
+statistical_results_preference(2).val      = min_val;
+[min_val, min_idx] = min(statistical_results(:,4));
+statistical_results_preference(3).name     = 'absmean_tz';
+statistical_results_preference(3).fullname = 'Absolute Mean tz';
+statistical_results_preference(3).idx      = min_idx;
+statistical_results_preference(3).val      = min_val;
 
-[min_absmean_rz_val, min_absmean_rz_idx] = min(statistical_results(:,3));
-[min_absmean_tz_val, min_absmean_tz_idx] = min(statistical_results(:,4));
+% Best Variance
+[min_val, min_idx] = min(statistical_results(:,5));
+statistical_results_preference(4).name     = 'var_rz';
+statistical_results_preference(4).fullname = 'Absolute Var Rz';
+statistical_results_preference(4).idx      = min_idx;
+statistical_results_preference(4).val      = min_val;
+[min_val, min_idx] = min(statistical_results(:,6));
+statistical_results_preference(5).name     = 'var_tz';
+statistical_results_preference(5).fullname = 'Absolute Var tz';
+statistical_results_preference(5).idx      = min_idx;
+statistical_results_preference(5).val      = min_val;
 
-%% Best Variance
-
-[min_var_rz_val, min_var_rz_idx] = min(statistical_results(:,5));
-[min_var_tz_val, min_var_tz_idx] = min(statistical_results(:,6));
+clear min_val min_idx dist_to_origin;
 
 %% Picking the best from our preference
-% for example, i will pick the best mean absolute distance for r
+% for example, i will pick the best mean absolute distance for rz
+
+MEAN_RZTZ  = 1;
+ABSMEAN_RZ = 2;
+ABSMEAN_TZ = 3;
+VAR_RZ     = 4;
+VAR_TZ     = 5;
 
 % select file
-fileidx  = min_var_tz_idx;
-filename = filenames{fileidx};
+preference = VAR_RZ;
+fileidx    = statistical_results_preference(preference).idx;
+filename   = filenames{fileidx};
 load(strcat(filepath, filesep, filename));
 
 % display the parameter configuration
 fprintf('scale_a : %d\nscale_b : %d\nalpha   : %.2f\n', ...
         simulation_config.scale_a, simulation_config.scale_b, simulation_config.alpha);
+    
+%% Displaying the Result
 
-% calculate the global-minimums position magnitude from the origin
-middle = ceil(length(r_z)/2);
-costfunctions_min_normalized = costfunctions_min - middle;
-costfunctions_min_magnitude  = sqrt(sum((costfunctions_min_normalized.^2),2));
-
+%{
+figure1 = figure('Name', 'Global Minimums', 'Position', [50 50 375 350]);
 % prepare for scatter plot
 scatter_size = 10;
 rz_est = r_z(costfunctions_min(:,1))';
 tz_est = t_z(costfunctions_min(:,2))';
 % draw scatters for global minimums
-figure1 = figure('Name', 'Global Minimums', 'Position', [50 50 400 350]);
 scatter( rz_est, tz_est, scatter_size, costfunctions_min_magnitude, 'filled');
 grid on; hold on;
 % draw a rectangle to show the error limit
@@ -97,16 +118,71 @@ ylim([t_z(1) t_z(end)]);
 % label the axis
 xlabel('R_z');
 ylabel('t_z');
+%}
 
-% % draw 3d histogram
-% figure(2);
-% rz_tz_est = [rz_est, tz_est];
-% hist3(rz_tz_est, 'Nbins', [10 10], 'CDataMode','auto', 'FaceColor','interp', 'FaceAlpha', 0.8);
-% xlabel('R_z');
-% ylabel('t_z');
-% zlabel('Count');
+figure1 = figure('Name', 'Global Minimums', 'Position', [50 50 500 650]);
+% prepare histogram
+rz_est = r_z(costfunctions_min(:,1))';
+tz_est = t_z(costfunctions_min(:,2))';
+% draw 3d histogram
+hist3( [rz_est, tz_est], ...
+       'Ctrs', {-5:0.25:5, -5/1000:0.25/1000:5/1000}, ...
+       'FaceAlpha', 0.5, ...
+       'EdgeColor', 'interp', ...
+       'CDataMode','auto', 'FaceColor','interp');
+hold on;
 
+% i want to put intensity map under the 3d histogram, so i follow this
+% example https://www.mathworks.com/help/stats/hist3.html at "Plot
+% Histogram with Intensity Map"
 
+% count the number of each element in each bin
+N = hist3([rz_est, tz_est], 'Ctrs', {r_z, t_z}, 'CDataMode','auto', 'FaceColor','interp', 'FaceAlpha', 0.8 );
+% Generate a grid to draw the 2-D projected view of intensities by using pcolor.
+N_pcolor = N';
+N_pcolor(size(N_pcolor,1)+1,size(N_pcolor,2)+1) = 0;
+xl = linspace(min(r_z),max(r_z),size(N_pcolor,2));
+yl = linspace(min(t_z),max(t_z),size(N_pcolor,1));
+% Draw the intensity map by using pcolor. 
+h = pcolor(xl, yl, N_pcolor);
+colormap('default'); 
+colorbar;
+% Set the z-level of the intensity map to view the histogram and the intensity map together.
+h.ZData = -max(N_pcolor(:)) * ones(size(N_pcolor));
+h.EdgeColor = 'none';
+ax = gca;
+ax.ZTick(ax.ZTick < 0) = [];
+
+% draw the rectangle to show the accuracy limit
+plot3([-1 -1 1 1 -1], [-0.001 0.001 0.001 -0.001 -0.001], [-max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:))], 'MarkerFaceColor', 'g');
+plot3([-2 -2 2 2 -2], [-0.002 0.002 0.002 -0.002 -0.002], [-max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:))], 'MarkerFaceColor', 'r');
+
+view(-30, 20);
+xlabel('R_z');
+ylabel('t_z');
+zlabel('Count');
+
+clear N N_pcolor xl yl h ax;
+
+%% Save Pictures
+
+% get directory
+[file, path] = uiputfile('*.*', 'File Selection', sprintf('%s_%s', statistical_results_preference(preference).name, 'noise1'));
+% if user press cancel, stop
+if file==0
+  return
+end
+
+% save picture as png
+saveas(figure1, strcat(path, file), 'png');
+% save picture to pdf
+% https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
+set(figure1,'Units','Inches');
+pos = get(figure1,'Position');
+set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
+print(figure1, strcat(path, file),'-dpdf','-r0');
+% save 
+writestruct(simulation_config, strcat(path, file, '.xml'));
 
 
 

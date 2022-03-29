@@ -1,19 +1,20 @@
 clear; close all;
 addpath('..\functions\display\subaxis');
 
-% i forgot to save this from the simulation, so i just put this here
-ptCloud_scale = 1000;
-range = 15;
-step  = 0.5;
-r_z   = (-range:step:range);
-t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
+% % i forgot to save this from the simulation, so i just put this here
+% ptCloud_scale = 1000;
+% range = 15;
+% step  = 0.5;
+% r_z   = (-range:step:range);
+% t_z   = (-range/ptCloud_scale:step/ptCloud_scale:range/ptCloud_scale);
+% clear ptCloud_scale range step;
 
-clear ptCloud_scale range step;
+savefile = false;
 
 %% Loading the File
 
 % load the data
-filepath   = 'abmode_sim3';
+filepath   = 'abmode_sim2d';
 fileinfos  = dir(fullfile(filepath, '*.mat'));
 filenames  = {fileinfos.name}';
 
@@ -98,6 +99,14 @@ load(strcat(filepath, filesep, filename));
 fprintf('scale_a : %d\nscale_b : %d\nalpha   : %.2f\n', ...
         simulation_config.scale_a, simulation_config.scale_b, simulation_config.alpha);
     
+% display the statistical results based on preference
+fprintf('mean_rz\t\t: %.4f\tmean_tz\t\t: %.4f\nabsmean_rz\t: %.4f\tabsmean_tz\t: %.4f\nvar_rz\t\t: %.4f\tvar_tz\t\t: %4f\n', ...
+        statistical_results(fileidx,1), statistical_results(fileidx,2), ...
+        statistical_results(fileidx,3), statistical_results(fileidx,4), ...
+        statistical_results(fileidx,5), statistical_results(fileidx,6) );
+        
+
+    
 %% Displaying the Result
 
 %{
@@ -166,6 +175,8 @@ clear N N_pcolor xl yl h ax;
 
 %% Save Pictures
 
+if (savefile)
+
 % get directory
 [file, path] = uiputfile('*.*', 'File Selection', sprintf('%s_%s', statistical_results_preference(preference).name, 'noise1'));
 % if user press cancel, stop
@@ -183,6 +194,8 @@ set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3)
 print(figure1, strcat(path, file),'-dpdf','-r0');
 % save 
 writestruct(simulation_config, strcat(path, file, '.xml'));
+
+end
 
 
 

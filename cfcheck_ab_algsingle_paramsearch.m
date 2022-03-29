@@ -5,7 +5,7 @@ path_boneUSsimple           = '..\boneUSsimple';
 path_gmmreg                 = '..\gmmreg\MATLAB\GaussTransform';
 
 path_bone      = strcat(path_pointcloudregistration, filesep, 'data', filesep, 'bone');
-path_amode     = strcat(path_bone, filesep, filesep, 'amode_accessible_sim2');
+path_amode     = strcat(path_bone, filesep, filesep, 'amode_accessible_sim3');
 path_bmode     = strcat(path_boneUSsimple, filesep, 'outputs', filesep, 'usmeasurement_b');
 path_function1 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'experimental');
 path_function2 = strcat(path_boneUSsimple, filesep, 'functions', filesep, 'geometry');
@@ -66,7 +66,7 @@ if(displaybone)
 end
 
 %% Prepare the B-mode data
-filename_bmodedata = sprintf('usdata_b_2b');
+filename_bmodedata = sprintf('usdata_b_0b');
 filepath_bmodedata = sprintf('%s%s%s.mat', path_bmode, filesep, filename_bmodedata);
 load(filepath_bmodedata);
 Ub_pointcloud = bmode_simulation.pointcloud;
@@ -124,9 +124,9 @@ num_trials              = 100;
 % (refer to file usmeasurement_b.m)
 if(use_boneportion)
     % get the bone portion
-    % U_breve_part = get_boneportion(bmode_simulation.portion, U_breve')';
+    U_breve_part = get_boneportion(bmode_simulation.portion, U_breve')';
     % U_breve_part = get_boneportion([0.125 0.225], U_breve')';
-    U_breve_part = get_boneportion([0.25 0.35], U_breve')';
+    % U_breve_part = get_boneportion([0.25 0.35], U_breve')';
     % display it
     if(displaybone)
         plot3( axes1, ...
@@ -140,7 +140,7 @@ if(use_boneportion)
 end
 
 % naming the filename for result
-filepath = 'results\abmode_sim3';
+filepath = 'results\abmode_sim2d';
 
 %% Simulation Start
 
@@ -284,6 +284,8 @@ for trial=1:num_trials
         ylabel('Rz (deg)');
         zlabel('Cost function');
         view(-90, 90);
+        
+        break;
     end
 
     % look for the min
@@ -291,6 +293,11 @@ for trial=1:num_trials
     [costfunctions_min(trial, 1), costfunctions_min(trial, 2)] = find(cf == minValue);
 
 % end trials    
+end
+
+% if debug mode go out of the loop
+if( or(displaybone, displaycf) )
+    break;
 end
 
 % save the details of the simulation
@@ -314,8 +321,20 @@ save(fullpath, 'costfunctions_min', 'simulation_config', 'r_z', 't_z');
 
 % end alpha
 end
+
+% if debug mode go out of the loop
+if( or(displaybone, displaycf) )
+    break;
+end
+
 % end scale_b
 end
+
+% if debug mode go out of the loop
+if( or(displaybone, displaycf) )
+    break;
+end
+
 % end scale_a
 end
 

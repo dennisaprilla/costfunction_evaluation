@@ -14,9 +14,11 @@ savefile = false;
 %% Loading the File
 
 % load the data
-filepath   = 'abmode_sim2d';
-fileinfos  = dir(fullfile(filepath, '*.mat'));
-filenames  = {fileinfos.name}';
+simname     = 'abmode_sim2d';
+simpath     = 'abmode_simulations';
+simfullpath = strcat(simpath, filesep, simname);
+fileinfos   = dir(fullfile(simfullpath, '*.mat'));
+filenames   = {fileinfos.name}';
 
 statistical_results = zeros(length(filenames), 6);
 
@@ -24,7 +26,7 @@ for filenumber = 1:length(filenames)
     
     % get the current mat file
     current_filename = filenames{filenumber};
-    load(strcat(filepath, filesep, current_filename));
+    load(strcat(simfullpath, filesep, current_filename));
     
     % costfunctions_min contains index of the search-space matrix, let's
     % convert it to real rz and tz value
@@ -93,7 +95,7 @@ VAR_TZ     = 5;
 preference = VAR_RZ;
 fileidx    = statistical_results_preference(preference).idx;
 filename   = filenames{fileidx};
-load(strcat(filepath, filesep, filename));
+load(strcat(simfullpath, filesep, filename));
 
 % display the parameter configuration
 fprintf('scale_a : %d\nscale_b : %d\nalpha   : %.2f\n', ...
@@ -105,7 +107,14 @@ fprintf('mean_rz\t\t: %.4f\tmean_tz\t\t: %.4f\nabsmean_rz\t: %.4f\tabsmean_tz\t:
         statistical_results(fileidx,3), statistical_results(fileidx,4), ...
         statistical_results(fileidx,5), statistical_results(fileidx,6) );
         
-
+% for copying to excel
+final_result = [ statistical_results(fileidx,3), ...
+                 statistical_results(fileidx,4), ...
+                 statistical_results(fileidx,1), ...
+                 statistical_results(fileidx,2), ...
+                 statistical_results(fileidx,5), ...
+                 statistical_results(fileidx,6), ...
+               ];
     
 %% Displaying the Result
 
@@ -144,6 +153,8 @@ hold on;
 % i want to put intensity map under the 3d histogram, so i follow this
 % example https://www.mathworks.com/help/stats/hist3.html at "Plot
 % Histogram with Intensity Map"
+maxbin_z            = 8;
+zlevel_intensitymap = -8;
 
 % count the number of each element in each bin
 N = hist3([rz_est, tz_est], 'Ctrs', {r_z, t_z}, 'CDataMode','auto', 'FaceColor','interp', 'FaceAlpha', 0.8 );
@@ -156,20 +167,24 @@ yl = linspace(min(t_z),max(t_z),size(N_pcolor,1));
 h = pcolor(xl, yl, N_pcolor);
 colormap('default'); 
 colorbar;
+caxis([0 maxbin_z])
 % Set the z-level of the intensity map to view the histogram and the intensity map together.
-h.ZData = -max(N_pcolor(:)) * ones(size(N_pcolor));
+% zlevel_intensitymap = -max(N_pcolor(:));
+h.ZData = zlevel_intensitymap * ones(size(N_pcolor));
 h.EdgeColor = 'none';
 ax = gca;
 ax.ZTick(ax.ZTick < 0) = [];
 
 % draw the rectangle to show the accuracy limit
-plot3([-1 -1 1 1 -1], [-0.001 0.001 0.001 -0.001 -0.001], [-max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:))], 'MarkerFaceColor', 'g');
-plot3([-2 -2 2 2 -2], [-0.002 0.002 0.002 -0.002 -0.002], [-max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:)) -max(N_pcolor(:))], 'MarkerFaceColor', 'r');
+plot3([-1 -1 1 1 -1], [-0.001 0.001 0.001 -0.001 -0.001], [zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap], 'MarkerFaceColor', 'g');
+plot3([-2 -2 2 2 -2], [-0.002 0.002 0.002 -0.002 -0.002], [zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap zlevel_intensitymap], 'MarkerFaceColor', 'r');
 
 view(-30, 20);
+zlim([zlevel_intensitymap maxbin_z]);
 xlabel('R_z');
 ylabel('t_z');
 zlabel('Count');
+title(sprintf('%s %s %s_%d', simname, statistical_results_preference(preference).name, 'noise', simulation_config.noise.level), 'Interpreter', 'none');
 
 clear N N_pcolor xl yl h ax;
 
@@ -178,7 +193,7 @@ clear N N_pcolor xl yl h ax;
 if (savefile)
 
 % get directory
-[file, path] = uiputfile('*.*', 'File Selection', sprintf('%s_%s', statistical_results_preference(preference).name, 'noise1'));
+[file, path] = uiputfile('*.*', 'File Selection', sprintf('%s_%s%d', statistical_results_preference(preference).name, 'noise', simulation_config.noise.level));
 % if user press cancel, stop
 if file==0
   return

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<struct>
+    <costfunction_name>gmm</costfunction_name>
+    <scaleconst>0.0001</scaleconst>
+    <scale_a>40</scale_a>
+    <scale_b>10</scale_b>
+    <alphaconst>0.046875</alphaconst>
+    <alpha>0.5</alpha>
+    <trials>100</trials>
+    <use_boneportion>true</use_boneportion>
+    <noise>
+        <level>2</level>
+        <tconst>1</tconst>
+        <skewconst>0.025</skewconst>
+        <Rconst>1.25</Rconst>
+    </noise>
+</struct>

@@ -66,7 +66,7 @@ if(displaybone)
 end
 
 %% Prepare the B-mode data
-filename_bmodedata = sprintf('usdata_b_0b');
+filename_bmodedata = sprintf('usdata_b_0a');
 filepath_bmodedata = sprintf('%s%s%s.mat', path_bmode, filesep, filename_bmodedata);
 load(filepath_bmodedata);
 Ub_pointcloud = bmode_simulation.pointcloud;
@@ -98,7 +98,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation Setup
 
 % setup the noise constants
-noise_level     = 2;
+noise_level     = 1;
 noise_tconst    = 1;
 noise_skewconst = 0.025;
 noise_Rconst    = 1.25;
@@ -110,14 +110,14 @@ noise_bex_R    = noise_level*noise_Rconst;
 noise_bex_t    = noise_level*noise_tconst;
 
 % setup the simulation trials config
-costfunction_name       = "gmm";
+costfunction_name       = "rmse";
 costfunction_scaleconst = 1e-4;
-costfunction_scales_a   = [10 20 30 40 50];
-costfunction_scales_b   = [10 20 30 40 50];
+costfunction_scales_a   = [0];
+costfunction_scales_b   = [0];
 costfunction_alphaconst = size(Ua_pointcloud, 1)/size(Ub_pointcloud, 1);
 costfunction_alphas     = [0.5 1.0 1.5 2.0];
 use_boneportion         = true;
-num_trials              = 100;
+num_trials              = 500;
 
 % if use_boneportion is specified, we will use only the portion of the bone
 % instead of the whole bone. Portion is obtained from simulation toolbox 
@@ -140,7 +140,7 @@ if(use_boneportion)
 end
 
 % naming the filename for result
-filepath = 'results\abmode_sim2d';
+filepath = 'results\abmode_simulations\abmode_sim3a';
 
 %% Simulation Start
 

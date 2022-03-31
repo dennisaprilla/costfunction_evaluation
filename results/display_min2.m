@@ -9,11 +9,11 @@ addpath('..\functions\display\subaxis');
 %%
 
 % load the data;
-path                 = 'accessible_sim2';
+filepath             = 'amode_simulations\accessible_sim2';
 filenames            = {'tibia_gmm_scale20', 'tibia_gmm_scale40'};
 current_filename     = filenames{2};
-use_shiftingconstant = false;
-load(strcat(path, filesep, current_filename, '.mat'));
+use_shiftingconstant = true;
+load(strcat(filepath, filesep, current_filename, '.mat'));
 
 % get the information from the trials
 noises            = trialsdesc.noises;
@@ -38,7 +38,8 @@ if (use_shiftingconstant)
         temp = strjoin(newStr(1:3), '_');
         filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', temp);
     end
-    load(filename_shiftingconstant);
+    fullpath_shiftingconstant = strcat(filepath, filesep, filename_shiftingconstant);
+    load(fullpath_shiftingconstant);
     % create different name for figure which uses shifting constant
     filename_forsaving = sprintf('%s+sc', current_filename);
 else
@@ -105,12 +106,12 @@ for noise=1:length(noises)
 end
 
 % save picture to png
-saveas(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, path, filesep, filename_forsaving), 'png');
+saveas(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, filepath, filesep, filename_forsaving), 'png');
 % save picture to pdf
 % https://www.mathworks.com/matlabcentral/answers/12987-how-to-save-a-matlab-graphic-in-a-right-size-pdf
 set(figure1,'Units','Inches');
 pos = get(figure1,'Position');
 set(figure1,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)]);
-print(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, path, filesep, filename_forsaving),'-dpdf','-r0');
+print(figure1, sprintf('%s%s%s%s%s', 'pictures', filesep, filepath, filesep, filename_forsaving),'-dpdf','-r0');
 
 

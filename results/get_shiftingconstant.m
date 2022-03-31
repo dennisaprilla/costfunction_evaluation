@@ -1,12 +1,12 @@
 clear; close all; clc;
 
-filenames={'tibia_gmm_scale10', 'tibia_gmm_scale50'};
-% filenames={'tibia_gmm_scale40'};
+filepath  = 'amode_simulations\accessible_sim2';
+filenames = {'tibia_gmm_scale40'};
 
 for file=1:length(filenames)
     
     current_filename = filenames{file};
-    load(strcat(current_filename, '.mat'));
+    load(strcat(filepath, filesep, current_filename, '.mat'));
     
     % costfunctions_min contains index of the search-space matrix, let's
     % convert it to real rz and tz value
@@ -22,7 +22,8 @@ for file=1:length(filenames)
     end
     shiftingconstant = containers.Map(keyset, valset);
     
-    save(sprintf('%s_shiftingconstant.mat', current_filename), 'shiftingconstant');
+    save( strcat(filepath, filesep, current_filename, '_shiftingconstant.mat'), ...
+         'shiftingconstant');
     
 end
 

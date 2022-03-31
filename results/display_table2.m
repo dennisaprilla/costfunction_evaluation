@@ -6,15 +6,16 @@ clear; close all; clc;
 addpath('..\functions\display\subaxis');
 
 % load the data;
-filenames            = {'tibia_gmm_scale40_testset', 'tibia_rmse_scaleNaN'};
-use_shiftingconstant = [true, false];
+filepath             = 'amode_simulations\accessible_sim2';
+filenames            = {'tibia_gmm_scale40', 'tibia_rmse_scaleNaN'};
+use_shiftingconstant = [false, false];
 
 data = [];
-for file=1:length(filenames)
+for file=1:length(filenames)    
     
     % load the corresponding file
     current_filename = filenames{file};
-    load(strcat(current_filename, '.mat'));    
+    load(strcat(filepath, filesep, current_filename, '.mat'));    
 
     % if you have shifting constant data, let use_shiftingconstant value to true
     if (use_shiftingconstant(file))
@@ -26,7 +27,8 @@ for file=1:length(filenames)
             temp = strjoin(newStr(1:3), '_');
             filename_shiftingconstant = sprintf('%s_shiftingconstant.mat', temp);
         end
-        load(filename_shiftingconstant);
+        fullpath_shiftingconstant = strcat(filepath, filesep, filename_shiftingconstant);
+        load(fullpath_shiftingconstant);
     end
 
     % get the information from the trials description
@@ -90,7 +92,7 @@ for file=1:length(filenames)
     A = [ 1 2 3; 4 5 6; 7 8 9; 10 11 12 ]'
     A_reshaped = reshape(A, 12, 1)
     %}
-    alldiagcov = cell2mat(reshape(rz_tz_cov, 12, 1));
+    alldiagcov = cell2mat(reshape(rz_tz_cov, length(noises)*length(pointcounts), 1));
     
     % put everything to data variable
     data = [data, allmeanabs, allmean, alldiagcov];

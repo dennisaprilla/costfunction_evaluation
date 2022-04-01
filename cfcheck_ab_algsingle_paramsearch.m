@@ -66,7 +66,7 @@ if(displaybone)
 end
 
 %% Prepare the B-mode data
-filename_bmodedata = sprintf('usdata_b_0a');
+filename_bmodedata = sprintf('usdata_b_0b');
 filepath_bmodedata = sprintf('%s%s%s.mat', path_bmode, filesep, filename_bmodedata);
 load(filepath_bmodedata);
 Ub_pointcloud = bmode_simulation.pointcloud;
@@ -140,7 +140,7 @@ if(use_boneportion)
 end
 
 % naming the filename for result
-filepath = 'results\abmode_simulations\abmode_sim3a';
+filepath = 'results\abmode_simulations\abmode_sim3c';
 
 %% Simulation Start
 

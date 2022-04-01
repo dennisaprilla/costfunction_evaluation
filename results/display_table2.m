@@ -8,7 +8,7 @@ addpath('..\functions\display\subaxis');
 % load the data;
 filepath             = 'amode_simulations\accessible_sim2';
 filenames            = {'tibia_gmm_scale40', 'tibia_rmse_scaleNaN'};
-use_shiftingconstant = [false, false];
+use_shiftingconstant = [true, false];
 
 data = [];
 for file=1:length(filenames)    

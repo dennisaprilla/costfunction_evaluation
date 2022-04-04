@@ -1,0 +1,4 @@
+- This simulation is meant to search the optimal hyper-parameters for RMSE distance costfunction, i.e. only alpha.
+- The we look for a very coarse way, i.e. 0.5:0.5:2.0
+- b-mode mesurement is using usdata_b_0a
+- a-mode measurement is using accessible_sim2/amode_tibia_15

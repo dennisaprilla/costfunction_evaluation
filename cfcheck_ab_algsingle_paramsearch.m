@@ -98,7 +98,7 @@ ts = [ zeros(2, length(t_z)); t_z];
 %% Simulation Setup
 
 % setup the noise constants
-noise_level     = 1;
+noise_level     = 2;
 noise_tconst    = 1;
 noise_skewconst = 0.025;
 noise_Rconst    = 1.25;
@@ -110,14 +110,14 @@ noise_bex_R    = noise_level*noise_Rconst;
 noise_bex_t    = noise_level*noise_tconst;
 
 % setup the simulation trials config
-costfunction_name       = "rmse";
+costfunction_name       = "gmm";
 costfunction_scaleconst = 1e-4;
-costfunction_scales_a   = [0];
-costfunction_scales_b   = [0];
+costfunction_scales_a   = [25 30 35 40 45];
+costfunction_scales_b   = [15 20 25 30 35];
 costfunction_alphaconst = size(Ua_pointcloud, 1)/size(Ub_pointcloud, 1);
-costfunction_alphas     = [0.5 1.0 1.5 2.0];
+costfunction_alphas     = [0.3 0.5 0.7];
 use_boneportion         = true;
-num_trials              = 500;
+num_trials              = 100;
 
 % if use_boneportion is specified, we will use only the portion of the bone
 % instead of the whole bone. Portion is obtained from simulation toolbox 
@@ -140,7 +140,7 @@ if(use_boneportion)
 end
 
 % naming the filename for result
-filepath = 'results\abmode_simulations\abmode_sim3c';
+filepath = 'results\abmode_simulations\sim4\abmode_sim4d';
 
 %% Simulation Start
 
